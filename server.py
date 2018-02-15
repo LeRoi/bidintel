@@ -1,5 +1,5 @@
 import flask, json, os
-from flask import jsonify, Flask, request, render_template
+from flask import jsonify, Flask, Response, request, render_template
 
 import lib.structure
 
