@@ -18,22 +18,6 @@
 </head>
 
 <script>
-function submit_bids() {
-	$.ajax({
-		url: 'FILL_THIS_IN',
-		data: $('form').serialize(),
-		type: 'POST',
-		// Remove these eventually.
-		success: function(response) {
-			console.log(response);
-		},
-		error: function(error) {
-			console.log(error);
-		}
-	});
-	//$('form')[0].reset();
-}
-
 var app = angular.module('bidintel', ['ngMaterial']);
 app.controller('bidController', function($http) {
 	var self = this;
@@ -41,30 +25,74 @@ app.controller('bidController', function($http) {
 	$http.get('/data/professors').then(function(data) {
 		self.professors = data.data['professors'];
 	});
+	$http.get('/data/courses').then(function(data) {
+		self.courses = data.data['courses'];
+	});
+	$http.get('/data/fullcourses').then(function(data) {
+		self.fullCourses = self.fullCoursesToMap(data.data['fullcourses']);
+	});
 	
-	self.querySearch = function(q) {
-		/*return q ? self.professors.filter((professor) {
-			return professor['name'].includes(q);
-		}) : self.professors;*/
-		return q ? self.professors.filter(self.createFilterFor(q)) : self.professors;
-		//return self.professors;
+	self.fullCoursesToMap = function(fullCourseData) {
+		var courseMap = {'courseToProfessor':{}, 'professorToCourse':{}};
+		for (i = 0; i < fullCourseData.length; i++) {
+			var result = fullCourseData[i];
+			courseMap['courseToProfessor'][result['cid']] = result['pids'];
+			for (j = 0; j < result['pids'].length; j++) {
+				var professorId = result['pids'][j];
+				if (!(professorId in courseMap['professorToCourse'])) {
+					courseMap['professorToCourse'][professorId] = [];
+				}
+				courseMap['professorToCourse'][professorId].push(result['cid']);
+			}
+		}
+		return courseMap;
 	}
 	
-	self.createFilterFor = function (query) {
-		var lQ = angular.lowercase(query);
-		return function filterFn(p) {
-			//return true;
-			console.log(p['name']);
-			return p['name'].toLowerCase().includes(lQ);
-		};
+	self.searchCourses = function(query, index) {
+		var validCourses = self.courses.filter(
+			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
+		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
+	}
+	
+	self.searchProfessors = function(query, index) {
+		var validProfessors = self.professors.filter(
+			self.teaches(self.bids[index]['selectedCourse'], self.fullCourses['courseToProfessor']));
+		return query ? validProfessors
+			.filter(self.fuzzyFind(query, 'name')) : validProfessors;
+	}
+	
+	self.fuzzyFind = function(query, field) {
+		// TODO: make this actual fuzzy find.
+		var lowerQuery = angular.lowercase(query);
+		return function fuzzyFilter(item) {
+			return item[field].toLowerCase().includes(lowerQuery);
+		}
+	}
+	
+	// courseData is a professor or a course.
+	self.teaches = function(courseData, courseMap) {
+		return function teachFilter(item) {
+			if (!courseData) return true;
+			if (!(courseData['id'] in courseMap)) return false;
+			return courseMap[courseData['id']].includes(item['id']);
+		}
 	}
 	
 	self.addBid = function() {
-		self.bids.push({1:1});
+		self.bids.push({});
 	}
 	
-	self.removeBid = function(idx=0) {
-		self.bids.splice(0, 1);
+	self.removeBid = function(index=0) {
+		self.bids.splice(index, 1);
+	}
+	
+	self.submit = function() {
+		$http.post('/submit_bids', self.bids)
+			.then(function onSuccess(response) {
+			console.log('Bids submitted successfully.');
+		}, function onError(response) {
+			console.log('Error submitting bids.');
+		});
 	}
 });
 </script>
@@ -75,21 +103,42 @@ app.controller('bidController', function($http) {
 <div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
 	<div style="margin-bottom: 12px;">
 		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
-		<button class="waves-effect waves-light btn" ng-click="ctrl.removeBid()">Remove Bid</button>
+		<button class="waves-effect waves-light btn" ng-click="ctrl.submit()">Submit</button>
 	</div>
 	<div ng-repeat="bid in ctrl.bids">
 		<md-autocomplete
-			  style="width: 300px"
-			  md-selected-item="bid['selectedItem']"
-			  md-search-text="bid['searchText']"
-			  md-items="item in ctrl.querySearch(bid['searchText'])"
-			  md-item-text="item['name']"
+			  style="width: 300px; margin-right: 24px;"
+			  md-no-cache=true
+			  md-selected-item="bid['selectedCourse']"
+			  md-search-text="bid['courseSearchText']"
+			  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
+			  md-item-text="course['name']"
+			  md-min-length="0"
+			  placeholder="Course">
+			<md-item-template>
+				<span>{{ '{{course["name"]}}' }}</span>
+			</md-item-template>
+			<md-not-found>
+				No matching courses found.
+			</md-not-found>
+		</md-autocomplete>
+		<md-autocomplete
+			  style="width: 300px;"
+			  md-no-cache=true
+			  md-selected-item="bid['selectedProfessor']"
+			  md-search-text="bid['professorSearchText']"
+			  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
+			  md-item-text="professor['name']"
 			  md-min-length="0"
 			  placeholder="Professor">
 			<md-item-template>
-				<span>{{ '{{item["name"]}}' }}</span>
+				<span>{{ '{{professor["name"]}}' }}</span>
 			</md-item-template>
+			<md-not-found>
+				No matching professors found.
+			</md-not-found>
 		</md-autocomplete>
+		<button style="margin-bottom: 24px;" class="waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">Remove</button>
 	</div>
 </div>
 

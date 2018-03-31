@@ -48,13 +48,13 @@ def professors():
     professors = []
     for result in sql.fetch_table(sql.Tables.PROFESSORS):
         professors.append({'id': result[0],
-                           'name': result[2]})
+                           'name': result[1]})
     return json.dumps({'professors': professors})
 
 @app.route('/data/courses')
 def courses():
     courses = []
-    for result in sql.fetch_table(sql.Tables.Courses):
+    for result in sql.fetch_table(sql.Tables.COURSES):
         courses.append({'id': result[0],
                         'type': result[1],
                         'name': result[2]})
@@ -63,7 +63,7 @@ def courses():
 @app.route('/data/fullcourses')
 def fullcourses():
     fullcourses = []
-    for result in sql.fetch_table(sql.Tables.FullCourses):
+    for result in sql.fetch_table(sql.Tables.FULL_COURSES):
         fullcourses.append({'id': result[0],
                         'cid': result[1],
                         'pids': csv_to_ids(result[2])})
@@ -90,6 +90,11 @@ def submit_bids():
     sql.update_next_id(db, table, next_id + 1)
     db.close()
     add_row(table, format_data(table, form, next_id))
+    return json.dumps({'status':'OK'})
+
+@app.route('/submit_bids', methods=['POST'])
+def submit():
+    print 'Received data: %s' % str(request.data)
     return json.dumps({'status':'OK'})
 
 @app.route('/drag')
