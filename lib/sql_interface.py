@@ -1,4 +1,6 @@
 from enum import IntEnum
+from logic import *
+import constants
 import sqlite3
 import structure
 
@@ -27,7 +29,7 @@ class SQL:
         CREATE TABLE fullCourses (
             id INTEGER PRIMARY KEY,
             cId INTEGER,
-            pId INTEGER);'''
+            pIds TEXT);'''
 
         CREATE_USERS_TABLE = '''
         CREATE TABLE users (
@@ -53,7 +55,7 @@ class SQL:
     class INSERT:
         INSERT_PROFESSOR = 'INSERT INTO professors (id, name) VALUES (%d, "%s");'
         INSERT_COURSE = 'INSERT INTO courses (id, type, name) VALUES (%d, %d, "%s");'
-        INSERT_FULL_COURSE = 'INSERT INTO fullCourses (id, cId, pId) VALUES (%d, %d, %d);'
+        INSERT_FULL_COURSE = 'INSERT INTO fullCourses (id, cId, pIds) VALUES (%d, %d, "%s");'
         INSERT_USER = 'INSERT INTO users (id, hasBid, bids) VALUES (%d, %d, "%s");'
         INSERT_BID = '''
         INSERT INTO bids (id, fId, term, year, rank, gotIn, waitlist)
@@ -112,6 +114,14 @@ def update_next_id(db, table, nextId):
     query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' % (nextId, table))
     db.commit()
 
+def fetch_table(table):
+    db = sql_connect(constants.DATABASE_PATH)
+    cursor = db.cursor()
+    query(cursor, SQL.SELECT_ALL % SQL.TABLE_MAP[table])
+    result = [line for line in cursor.fetchall()]
+    db.close()
+    return result
+
 def insert_row(db, table, rowObject):
     cursor = db.cursor()
     if table == Tables.PROFESSORS:
@@ -119,10 +129,10 @@ def insert_row(db, table, rowObject):
     elif table == Tables.COURSES:
         query(cursor, SQL.INSERT.INSERT_COURSE % (rowObject.id, rowObject.type, rowObject.name))
     elif table == Tables.FULL_COURSES:
-        query(cursor, SQL.INSERT.INSERT_FULL_COURSE % (rowObject.id, rowObject.c_id, rowObject.p_id))
+        query(cursor, SQL.INSERT.INSERT_FULL_COURSE % (rowObject.id, rowObject.c_id, ids_to_csv(rowObject.p_ids)))
     elif table == Tables.USERS:
         query(cursor, SQL.INSERT.INSERT_USER %
-                       (rowObject.id, 1 if rowObject.has_bids() else 0, rowObject.bid_string()))
+                       (rowObject.id, 1 if rowObject.has_bids() else 0, ids_to_csv(rowObject.bids)))
     elif table == Tables.BIDS:
         query(cursor, SQL.INSERT.INSERT_BID % (
             rowObject.id, rowObject.f_id, rowObject.term,

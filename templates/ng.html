@@ -1,0 +1,80 @@
+<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	
+	<!-- Angular Material -->
+	<link rel="stylesheet" href="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-aria.js"></script>
+	<script src="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.js"></script>
+</head>
+
+<body>
+<div ng-app="bidintel" ng-controller="bidController as ctrl">
+	<p>Name: <input type="text" ng-model="ctrl.name"></p>
+	<p ng-bind="ctrl.name"></p>
+	<button ng-click="ctrl.add_name()">Click me</button>
+	<div ng-repeat="s in ctrl.names">{{ '{{ s }}' }}</div>
+	
+	<div ng-repeat="p in ctrl.professors">
+		{{ '{{p["name"]}} '}}
+	</div>
+	
+	<md-autocomplete
+          md-selected-item="ctrl.selectedItem"
+          md-search-text="ctrl.searchText"
+          md-items="item in ctrl.querySearch(ctrl.searchText)"
+          md-item-text="item['name']"
+          md-min-length="0"
+          placeholder="What is your favorite US state?">
+		<md-item-template>
+			<span>{{ '{{item["name"]}}' }}</span>
+		</md-item-template>
+	</md-autocomplete>
+	
+</div>
+<div id="bidintel2" ng-app="bidintel2" style="margin-left:12px">
+	<bidintel-template></bidintel-template>
+</div>
+
+</body>
+
+<script>
+var app = angular.module('bidintel', ['ngMaterial']);
+app.controller('bidController', function($http) {
+	var self = this;
+	self.name = 'bodintel';
+	self.searchText = '';
+	
+	self.name = 'bidintel';
+	self.names = [1, 2, 3];
+	
+	self.add_name = function() {
+		self.names.push(self.names[self.names.length - 1] + 1);
+	}
+	
+	// Alternative way of fetching JSON
+	/*$.getJSON('/data/professors', function(data) {
+		$scope.professors = data;
+		$scope.$apply();
+	});*/
+	
+	$http.get('/data/professors').then(function(data) {
+		self.professors = data.data['professors'];
+	});
+	
+	self.querySearch = function(q) {
+		return self.professors;
+	}
+});
+
+var app2 = angular.module('bidintel2', []);
+app2.directive('bidintelTemplate', function() {
+	return {
+		template: '<b>some html</b>',
+	}
+});
+
+/** Necessary to have multiple apps on one page **/
+angular.bootstrap(document.getElementById("bidintel2"), ['bidintel2']);
+</script>

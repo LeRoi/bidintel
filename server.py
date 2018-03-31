@@ -1,53 +1,40 @@
 import flask, json, os
 from flask import jsonify, Flask, Response, request, render_template
 
-import lib.structure, lib.sql_interface
+import lib.structure
+import lib.sql_interface as sql
 from lib.constants import *
+from lib.logic import *
 
 app = Flask(__name__)
 debug = True
 
 def setup_server():
-    first_run = False
-    if not os.path.exists(DATABASE_PATH):
-        first_run = True
-
-    db = lib.sql_interface.sql_connect(DATABASE_PATH)
+    first_run = not os.path.exists(DATABASE_PATH)
+    db = sql.sql_connect(DATABASE_PATH)
     if first_run:
-        lib.sql_interface.create_tables(db)
-
-    cursor = db.cursor()
-    cursor.execute(lib.sql_interface.SQL.SELECT_ALL % 'fullCourses')
-    _maxRow = 0
-    for r in cursor.fetchall():
-        _maxRow = max(_maxRow, r[0])
-    lib.sql_interface.insert_row(db, lib.sql_interface.Tables.FULL_COURSES,
-                             lib.structure.FullCourse(_maxRow + 1, 1, 2))
+        sql.create_tables(db)
     db.close()
 
 def add_row(table, data):
-    db = lib.sql_interface.sql_connect(DATABASE_PATH)
-    lib.sql_interface.insert_row(db, table, data)
+    db = sql.sql_connect(DATABASE_PATH)
+    sql.insert_row(db, table, data)
     db.close()
 
-def to_ascii(form):
-    result = {}
-    for k in form:
-        result[k] = str(form[k].decode('utf-8').encode('ascii'))
-    return result
-
+## Move this to another file
 def format_data(table, form, next_id):
-    if table == lib.sql_interface.Tables.PROFESSORS:
+    print '\tFormatting (ID=%d) %s for Table %s' % (next_id, str(form), str(sql.Tables(table)))
+    if table == sql.Tables.PROFESSORS:
         return lib.structure.Professor(next_id, form['professor'])
-    elif table == lib.sql_interface.Tables.COURSES:
+    elif table == sql.Tables.COURSES:
         return lib.structure.Course(next_id, form['course_name'],
                                     int(form['course_type']))
-    elif table == lib.sql_interface.Tables.FULL_COURSES:
+    elif table == sql.Tables.FULL_COURSES:
         return lib.structure.FullCourse(next_id, int(form['course_id']),
-                                        int(form['professor_id']))
-    elif table == lib.sql_interface.Tables.USERS:
-        return lib.structure.User(next_id, bid_string=form['bids'])
-    elif table == lib.sql_interface.Tables.BIDS:
+                                        csv_to_ids(form['professor_ids']))
+    elif table == sql.Tables.USERS:
+        return lib.structure.User(next_id, csv_to_ids(['bids']))
+    elif table == sql.Tables.BIDS:
         return lib.structure.Bid(next_id, int(form['term']),
                                  int(form['year']), int(form['position']))
   
@@ -55,18 +42,52 @@ def format_data(table, form, next_id):
 def home():
     return Response(render_template('main.html'))
 
+## Should pre-process some of this.
+@app.route('/data/professors')
+def professors():
+    professors = []
+    for result in sql.fetch_table(sql.Tables.PROFESSORS):
+        professors.append({'id': result[0],
+                           'name': result[2]})
+    return json.dumps({'professors': professors})
+
+@app.route('/data/courses')
+def courses():
+    courses = []
+    for result in sql.fetch_table(sql.Tables.Courses):
+        courses.append({'id': result[0],
+                        'type': result[1],
+                        'name': result[2]})
+    return json.dumps({'courses': courses})
+
+@app.route('/data/fullcourses')
+def fullcourses():
+    fullcourses = []
+    for result in sql.fetch_table(sql.Tables.FullCourses):
+        fullcourses.append({'id': result[0],
+                        'cid': result[1],
+                        'pids': csv_to_ids(result[2])})
+    return json.dumps({'fullcourses': fullcourses})
+
+@app.route('/ngtest')
+def ngtest():
+    return Response(render_template('ng.html'))
+
 @app.route('/bid')
 def bid():
     return Response(render_template('bid.html'))
 
+@app.route('/update')
+def update_db():
+    return Response(render_template('update_db.html'))
+
 @app.route('/submitbids', methods=['POST'])
 def submit_bids():
-    print request.form
     form = to_ascii(request.form)
     table = int(form['table'])
-    db = lib.sql_interface.sql_connect(DATABASE_PATH)
-    next_id = lib.sql_interface.get_next_id(db, table)
-    lib.sql_interface.update_next_id(db, table, next_id + 1)
+    db = sql.sql_connect(DATABASE_PATH)
+    next_id = sql.get_next_id(db, table)
+    sql.update_next_id(db, table, next_id + 1)
     db.close()
     add_row(table, format_data(table, form, next_id))
     return json.dumps({'status':'OK'})

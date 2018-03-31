@@ -1,4 +1,5 @@
 from enum import IntEnum
+from logic import *
 
 class Term(IntEnum):
     FALL = 0
@@ -19,18 +20,12 @@ class NextId(IntEnum):
     BID = 4
 
 class User():
-    def __init__(self, u_id, bids=[], bid_string=''):
+    def __init__(self, u_id, bids=[]):
         self.id = u_id
-        self.bids = bids if len(bids) > 0 else self.bid_string_to_bids(bid_string)
+        self.bids = bids
 
     def has_bids(self):
         return len(self.bids) > 0
-
-    def bid_string(self):
-        return ','.join([str(bid) for bid in self.bids])
-
-    def bid_string_to_bids(self, s):
-        return [int(bid) for bid in s.split(',')]
 
 class Course():
     def __init__(self, c_id, name, course_type):
@@ -39,10 +34,10 @@ class Course():
         self.type = course_type
 
 class FullCourse():
-    def __init__(self, _id, c_id, p_id):
+    def __init__(self, _id, c_id, p_ids):
         self.id = _id
         self.c_id = c_id
-        self.p_id = p_id
+        self.p_ids = p_ids
 
 class Term():
     def __init__(self, year, term):

@@ -1,21 +1,29 @@
 <title>bidintel</title>
 <head>
 	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
+	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
+	
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
+	<!-- Angular Material -->
+	<link rel="stylesheet" href="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.css">
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-aria.js"></script>
+	<script src="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.js"></script>
+	
+	<!-- Material -->
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="/static/css/materialize.min.css">
-	<!--<link rel="stylesheet" href="/static/css/base.css">-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	
 </head>
 
 <script>
 function submit_bids() {
 	$.ajax({
-		url: '/submitbids',
+		url: 'FILL_THIS_IN',
 		data: $('form').serialize(),
-		//data: {'table':0, 'professor':'Goldsmith'},
-		//data: $('input').serialize(),
 		type: 'POST',
+		// Remove these eventually.
 		success: function(response) {
 			console.log(response);
 		},
@@ -26,57 +34,63 @@ function submit_bids() {
 	//$('form')[0].reset();
 }
 
-var app = angular.module('bidintel', []);
-app.controller('bidintelCtrl', function($scope) {
-	$scope.selection = "Professor";
-	$scope.choice = 0;
-	$scope.m = {
-		0: 'Professor',
-		1: 'Course',
-		2: 'Full Course',
-		3: 'User',
-		4: 'Bid',
-	};
+var app = angular.module('bidintel', ['ngMaterial']);
+app.controller('bidController', function($http) {
+	var self = this;
+	self.bids = [];
+	$http.get('/data/professors').then(function(data) {
+		self.professors = data.data['professors'];
+	});
+	
+	self.querySearch = function(q) {
+		/*return q ? self.professors.filter((professor) {
+			return professor['name'].includes(q);
+		}) : self.professors;*/
+		return q ? self.professors.filter(self.createFilterFor(q)) : self.professors;
+		//return self.professors;
+	}
+	
+	self.createFilterFor = function (query) {
+		var lQ = angular.lowercase(query);
+		return function filterFn(p) {
+			//return true;
+			console.log(p['name']);
+			return p['name'].toLowerCase().includes(lQ);
+		};
+	}
+	
+	self.addBid = function() {
+		self.bids.push({1:1});
+	}
+	
+	self.removeBid = function(idx=0) {
+		self.bids.splice(0, 1);
+	}
 });
 </script>
 <body>
 <script type="text/javascript" src="/static/js/materialize.min.js"></script>
 <script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
 
-<div ng-app="bidintel" ng-controller="bidintelCtrl">
-	<a class='dropdown-trigger btn' href='#' data-target='dropdown1' style="margin-top: 12px; margin-left: 12px">{{ '{{m[choice]}}' }}</a>
-
-
-	<ul id='dropdown1' class='dropdown-content'>
-	<li><a ng-click="choice = 0">Professor</a></li>
-	<li><a ng-click="choice = 1">Course</a></li>
-	<li><a ng-click="choice = 2">Full Course</a></li>
-	<li><a ng-click="choice = 3">User</a></li>
-	<li><a ng-click="choice = 4">Bid</a></li>
-	</ul>
-	<form style="margin-top: 12px; margin-left: 12px">
-		<input name="professor" placeholder="Professor" ng-if="choice == 0">
-		<input name="course_name" placeholder="Class name" ng-if="choice == 1">
-		<input name="course_type" placeholder="Class type" ng-if="choice == 1">
-		<input name="professor_id" placeholder="Professor ID" ng-if="choice == 2">
-		<input name="course_id" placeholder="Class ID" ng-if="choice == 2">
-		<input name="bids" placeholder="Bids" ng-if="choice == 3">
-		<input name="rank" placeholder="Rank" ng-if="choice == 4">
-		<input name="term" placeholder="Term" ng-if="choice == 4">
-		<input name="year" placeholder="Year" ng-if="choice == 4">
-		<input name="position" placeholder="Position" ng-if="choice == 4">
-		<input name="table" ng-model="choice">
-		<button class="waves-effect waves-light btn" onclick="submit_bids()">Submit</button>
-	</form>
+<div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
+	<div style="margin-bottom: 12px;">
+		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
+		<button class="waves-effect waves-light btn" ng-click="ctrl.removeBid()">Remove Bid</button>
+	</div>
+	<div ng-repeat="bid in ctrl.bids">
+		<md-autocomplete
+			  style="width: 300px"
+			  md-selected-item="bid['selectedItem']"
+			  md-search-text="bid['searchText']"
+			  md-items="item in ctrl.querySearch(bid['searchText'])"
+			  md-item-text="item['name']"
+			  md-min-length="0"
+			  placeholder="Professor">
+			<md-item-template>
+				<span>{{ '{{item["name"]}}' }}</span>
+			</md-item-template>
+		</md-autocomplete>
+	</div>
 </div>
 
-<script>
-$('.dropdown-trigger').dropdown();
-$('input')[1].addEventListener("keyup", function(e) {
-	e.preventDefault();
-	if (e.keyCode === 13) {
-		$('button')[0].click();
-	}
-});
-</script>
 </body>
