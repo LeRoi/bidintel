@@ -1,140 +1,14 @@
-<title>bidintel</title>
-<head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-	
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	
-	<!-- Angular Material -->
-	<link rel="stylesheet" href="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-aria.js"></script>
-	<script src="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.js"></script>
-	
-	<!-- Material -->
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="/static/css/materialize.min.css">
-	
-	<!-- Drag and Drop Lists -->
-	<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
-	
-</head>
+{% extends "base.html" %}
+{% block head %}
+<!-- Drag and Drop Lists -->
+<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
+<link rel="stylesheet" href="/static/css/drag-drop.css">
 
-<script>
-var app = angular.module('bidintel', ['dndLists', 'ngMaterial']);
-app.controller('bidController', function($http) {
-	var self = this;
-	self.bids = [];
-	$http.get('/data/professors').then(function(data) {
-		self.professors = data.data['professors'];
-	});
-	$http.get('/data/courses').then(function(data) {
-		self.courses = data.data['courses'];
-	});
-	$http.get('/data/fullcourses').then(function(data) {
-		self.fullCourses = self.fullCoursesToMap(data.data['fullcourses']);
-	});
-	
-	self.fullCoursesToMap = function(fullCourseData) {
-		var courseMap = {'courseToProfessor':{}, 'professorToCourse':{}};
-		for (i = 0; i < fullCourseData.length; i++) {
-			var result = fullCourseData[i];
-			courseMap['courseToProfessor'][result['cid']] = result['pids'];
-			for (j = 0; j < result['pids'].length; j++) {
-				// TODO: Treat joint professors correctly and group them together.
-				var professorId = result['pids'][j];
-				if (!(professorId in courseMap['professorToCourse'])) {
-					courseMap['professorToCourse'][professorId] = [];
-				}
-				courseMap['professorToCourse'][professorId].push(result['cid']);
-			}
-		}
-		return courseMap;
-	}
-	
-	self.searchCourses = function(query, index) {
-		var validCourses = self.courses.filter(
-			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
-		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
-	}
-	
-	self.searchProfessors = function(query, index) {
-		var validProfessors = self.professors.filter(
-			self.teaches(self.bids[index]['selectedCourse'], self.fullCourses['courseToProfessor']));
-		return query ? validProfessors
-			.filter(self.fuzzyFind(query, 'name')) : validProfessors;
-	}
-	
-	self.fuzzyFind = function(query, field) {
-		// TODO: make this actual fuzzy find.
-		var lowerQuery = angular.lowercase(query);
-		return function fuzzyFilter(item) {
-			return item[field].toLowerCase().includes(lowerQuery);
-		}
-	}
-	
-	// courseData is a professor or a course.
-	self.teaches = function(courseData, courseMap) {
-		return function teachFilter(item) {
-			if (!courseData) return true;
-			if (!(courseData['id'] in courseMap)) return false;
-			return courseMap[courseData['id']].includes(item['id']);
-		}
-	}
-	
-	self.addBid = function() {
-		self.bids.push({});
-	}
-	
-	self.removeBid = function(index=0) {
-		self.bids.splice(index, 1);
-	}
-	
-	self.submit = function() {
-		$http.post('/submit_bids', self.bids)
-			.then(function onSuccess(response) {
-			console.log('Bids submitted successfully.');
-		}, function onError(response) {
-			console.log('Error submitting bids.');
-		});
-	}
-});
-</script>
-<body>
-<script type="text/javascript" src="/static/js/materialize.min.js"></script>
+<!-- page specific: load after angular -->
+<script src="/static/js/bid.js"></script>
+{% endblock %}
 
-<style>
-ul[dnd-list] {
-    min-height: 42px;
-    padding-left: 0px;
-}
-
-ul[dnd-list] .dndDraggingSource {
-    display: none;
-}
-
-ul[dnd-list] .dndPlaceholder {
-    background-color: #ddd;
-    display: block;
-    min-height: 42px;
-}
-
-ul[dnd-list] li {
-    background-color: #fff;
-    border: 1px solid #ddd;
-    border-top-right-radius: 4px;
-    border-top-left-radius: 4px;
-    display: block;
-    padding: 10px 15px;
-    margin-bottom: -1px;
-}
-
-ul[dnd-list] li.selected {
-    background-color: #dff0d8;
-    color: #3c763d;
-}
-</style>
-
+{% block body %}
 <div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
 	<div style="margin-bottom: 12px;">
 		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
@@ -184,4 +58,4 @@ ul[dnd-list] li.selected {
 	</ul>
 </div>
 
-</body>
+{% endblock %}

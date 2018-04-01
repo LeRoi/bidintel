@@ -69,6 +69,7 @@ def fullcourses():
                         'pids': csv_to_ids(result[2])})
     return json.dumps({'fullcourses': fullcourses})
 
+## Clean this up later
 @app.route('/ngtest')
 def ngtest():
     return Response(render_template('ng.html'))
@@ -96,10 +97,6 @@ def submit_bids():
 def submit():
     print 'Received data: %s' % str(request.data)
     return json.dumps({'status':'OK'})
-
-@app.route('/drag')
-def drag():
-    return Response(render_template('drag.html'))
 
 setup_server()
 if __name__ == '__main_':
