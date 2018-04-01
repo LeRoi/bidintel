@@ -15,10 +15,13 @@
 	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
 	<link rel="stylesheet" href="/static/css/materialize.min.css">
 	
+	<!-- Drag and Drop Lists -->
+	<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
+	
 </head>
 
 <script>
-var app = angular.module('bidintel', ['ngMaterial']);
+var app = angular.module('bidintel', ['dndLists', 'ngMaterial']);
 app.controller('bidController', function($http) {
 	var self = this;
 	self.bids = [];
@@ -38,6 +41,7 @@ app.controller('bidController', function($http) {
 			var result = fullCourseData[i];
 			courseMap['courseToProfessor'][result['cid']] = result['pids'];
 			for (j = 0; j < result['pids'].length; j++) {
+				// TODO: Treat joint professors correctly and group them together.
 				var professorId = result['pids'][j];
 				if (!(professorId in courseMap['professorToCourse'])) {
 					courseMap['professorToCourse'][professorId] = [];
@@ -98,48 +102,86 @@ app.controller('bidController', function($http) {
 </script>
 <body>
 <script type="text/javascript" src="/static/js/materialize.min.js"></script>
-<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
+
+<style>
+ul[dnd-list] {
+    min-height: 42px;
+    padding-left: 0px;
+}
+
+ul[dnd-list] .dndDraggingSource {
+    display: none;
+}
+
+ul[dnd-list] .dndPlaceholder {
+    background-color: #ddd;
+    display: block;
+    min-height: 42px;
+}
+
+ul[dnd-list] li {
+    background-color: #fff;
+    border: 1px solid #ddd;
+    border-top-right-radius: 4px;
+    border-top-left-radius: 4px;
+    display: block;
+    padding: 10px 15px;
+    margin-bottom: -1px;
+}
+
+ul[dnd-list] li.selected {
+    background-color: #dff0d8;
+    color: #3c763d;
+}
+</style>
 
 <div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
 	<div style="margin-bottom: 12px;">
 		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
 		<button class="waves-effect waves-light btn" ng-click="ctrl.submit()">Submit</button>
 	</div>
-	<div ng-repeat="bid in ctrl.bids">
-		<md-autocomplete
-			  style="width: 300px; margin-right: 24px;"
-			  md-no-cache=true
-			  md-selected-item="bid['selectedCourse']"
-			  md-search-text="bid['courseSearchText']"
-			  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
-			  md-item-text="course['name']"
-			  md-min-length="0"
-			  placeholder="Course">
-			<md-item-template>
-				<span>{{ '{{course["name"]}}' }}</span>
-			</md-item-template>
-			<md-not-found>
-				No matching courses found.
-			</md-not-found>
-		</md-autocomplete>
-		<md-autocomplete
-			  style="width: 300px;"
-			  md-no-cache=true
-			  md-selected-item="bid['selectedProfessor']"
-			  md-search-text="bid['professorSearchText']"
-			  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
-			  md-item-text="professor['name']"
-			  md-min-length="0"
-			  placeholder="Professor">
-			<md-item-template>
-				<span>{{ '{{professor["name"]}}' }}</span>
-			</md-item-template>
-			<md-not-found>
-				No matching professors found.
-			</md-not-found>
-		</md-autocomplete>
-		<button style="margin-bottom: 24px;" class="waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">Remove</button>
-	</div>
+	<ul dnd-list="ctrl.bids">
+		<li ng-repeat="bid in ctrl.bids"
+			dnd-draggable="bid"
+			dnd-moved="ctrl.bids.splice($index, 1)"
+			dnd-effect-allowed="move"
+			dnd-selected="models.selected = bid"
+			ng-class="{'selected': models.selected === bid}">
+			<md-autocomplete
+				  style="width: 300px; margin-right: 24px;"
+				  md-no-cache=true
+				  md-selected-item="bid['selectedCourse']"
+				  md-search-text="bid['courseSearchText']"
+				  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
+				  md-item-text="course['name']"
+				  md-min-length="0"
+				  placeholder="Course">
+				<md-item-template>
+					<span>{{ '{{course["name"]}}' }}</span>
+				</md-item-template>
+				<md-not-found>
+					<span>No matching courses found.</span>
+				</md-not-found>
+			</md-autocomplete>
+			<md-autocomplete
+				  style="width: 300px;"
+				  md-no-cache=true
+				  md-selected-item="bid['selectedProfessor']"
+				  md-search-text="bid['professorSearchText']"
+				  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
+				  md-item-text="professor['name']"
+				  md-min-length="0"
+				  placeholder="Professor">
+				<md-item-template>
+					<span>{{ '{{professor["name"]}}' }}</span>
+				</md-item-template>
+				<md-not-found>
+					<span>No matching professors found.</span>
+				</md-not-found>
+			</md-autocomplete>
+			<button style="margin-bottom: 24px;" class="waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">Remove</button>
+		</li>
+	</ul>
 </div>
 
 </body>
