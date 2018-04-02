@@ -22,8 +22,3 @@ ul[dnd-list] li {
     padding: 10px 15px;
     margin-bottom: -1px;
 }
-
-ul[dnd-list] li.selected {
-    background-color: #dff0d8;
-    color: #3c763d;
-}

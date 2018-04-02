@@ -1,13 +1,7 @@
-<title>bidintel</title>
-<head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="/static/css/materialize.min.css">
-	<!--<link rel="stylesheet" href="/static/css/base.css">-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-
+{% extends "base.html" %}
+{% block head %}
+	<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
+{% endblock %}
 <script>
 function submit_bids() {
 	$.ajax({
@@ -42,10 +36,7 @@ app.controller('bidintelCtrl', function($scope, $http) {
 	});
 });
 </script>
-<body>
-<script type="text/javascript" src="/static/js/materialize.min.js"></script>
-<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
-
+{% block body %}
 <div ng-app="bidintel" ng-controller="bidintelCtrl">
 	<a class='dropdown-trigger btn' href='#' data-target='dropdown1' style="margin-top: 12px; margin-left: 12px">{{ '{{choices[choice]}}' }}</a>
 
@@ -71,9 +62,6 @@ app.controller('bidintelCtrl', function($scope, $http) {
 		<input hidden name="table" ng-model="choice">
 		<button class="waves-effect waves-light btn" onclick="submit_bids()">Submit</button>
 	</form>
-	<div ng-repeat="professor in professors">
-		{{ "{{ professor['name'] }} - {{ professor['id'] }}" }}
-	</div>
 </div>
 
 <script>
@@ -85,4 +73,4 @@ $('input')[1].addEventListener("keyup", function(e) {
 	}
 });
 </script>
-</body>
+{% endblock %}

@@ -1,0 +1,24 @@
+.autocomplete {
+	float: left;
+	padding-right: 18px;
+}
+
+#bidlist .bid-card {
+	display: flex;
+	justify-content: flex-start;
+	margin-bottom: 24px;
+	width: 35%;
+}
+
+.buttons {
+	padding-bottom: 12px;
+}
+
+.padding {
+	padding-left: 24px;
+	padding-top: 24px;
+}
+
+.remove-button {
+	margin-left: auto;
+}

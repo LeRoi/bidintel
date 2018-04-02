@@ -6,30 +6,33 @@
 
 <!-- page specific: load after angular -->
 <script src="/static/js/bid.js"></script>
+<link rel="stylesheet" href="/static/css/bid.css">
 {% endblock %}
 
 {% block body %}
-<div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
-	<div style="margin-bottom: 12px;">
+<div class="padding" ng-app="bidintel" ng-controller="bidController as ctrl">
+	<div class="buttons">
 		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
 		<button class="waves-effect waves-light btn" ng-click="ctrl.submit()">Submit</button>
 	</div>
-	<ul dnd-list="ctrl.bids">
+	<ul dnd-list="ctrl.bids" id="bidlist">
 		<li ng-repeat="bid in ctrl.bids"
 			dnd-draggable="bid"
 			dnd-moved="ctrl.bids.splice($index, 1)"
 			dnd-effect-allowed="move"
 			dnd-selected="models.selected = bid"
-			ng-class="{'selected': models.selected === bid}">
+			ng-class="{'selected': models.selected === bid}"
+			class="bid-card"
+			layout="row">
 			<md-autocomplete
-				  style="width: 300px; margin-right: 24px;"
 				  md-no-cache=true
 				  md-selected-item="bid['selectedCourse']"
 				  md-search-text="bid['courseSearchText']"
 				  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
 				  md-item-text="course['name']"
 				  md-min-length="0"
-				  placeholder="Course">
+				  placeholder="Course"
+				  class="autocomplete">
 				<md-item-template>
 					<span>{{ '{{course["name"]}}' }}</span>
 				</md-item-template>
@@ -38,14 +41,14 @@
 				</md-not-found>
 			</md-autocomplete>
 			<md-autocomplete
-				  style="width: 300px;"
 				  md-no-cache=true
 				  md-selected-item="bid['selectedProfessor']"
 				  md-search-text="bid['professorSearchText']"
 				  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
 				  md-item-text="professor['name']"
 				  md-min-length="0"
-				  placeholder="Professor">
+				  placeholder="Professor"
+				  class="autocomplete md-no-underline">
 				<md-item-template>
 					<span>{{ '{{professor["name"]}}' }}</span>
 				</md-item-template>
@@ -53,7 +56,7 @@
 					<span>No matching professors found.</span>
 				</md-not-found>
 			</md-autocomplete>
-			<button style="margin-bottom: 24px;" class="waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">Remove</button>
+			<button class="remove-button buttons waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">x</button>
 		</li>
 	</ul>
 </div>
