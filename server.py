@@ -82,8 +82,8 @@ def bid():
 def update_db():
     return Response(render_template('update_db.html'))
 
-@app.route('/submitbids', methods=['POST'])
-def submit_bids():
+@app.route('/submit_rows', methods=['POST'])
+def submit_rows():
     form = to_ascii(request.form)
     table = int(form['table'])
     db = sql.sql_connect(DATABASE_PATH)
