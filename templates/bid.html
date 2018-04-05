@@ -31,7 +31,10 @@
 				</md-option>
 			</md-select>
 		</md-input-container>
-		20<input ng-model="ctrl.year" type="number" style="width: 50px"></input>-{{'{{ctrl.year+1}}'}}
+		<div style="padding-right: 16px;">
+			20<input ng-model="ctrl.year" type="number" style="width: 50px"></input>-{{'{{ctrl.year+1}}'}}
+		</div>
+		<md-checkbox ng-model="ctrl.hasResults">Results are out</md-checkbox>
 	</div>
 	<div class="buttons">
 		<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
@@ -96,7 +99,10 @@
 					</md-item-template>
 				</md-autocomplete>
 				<div ng-repeat="i in [0]">
-					<md-checkbox ng-model="bid['gotIn']">Got in?</md-checkbox>
+					<md-checkbox ng-model="bid['gotIn']"
+						ng-disabled="ctrl.hasResults === undefined || !ctrl.hasResults">
+						Got in?
+					</md-checkbox>
 				</div>
 				<md-button class="md-icon-button remove-button"
 					ng-click="ctrl.removeBid($index)"

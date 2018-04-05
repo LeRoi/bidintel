@@ -13,6 +13,12 @@
 	padding-bottom: 12px;
 }
 
+.dropdowns {
+	align-items: center;
+	display: flex;
+	justify-content: flex-start;
+}
+
 md-list > md-list-item.md-3-line > div.md-list-item-inner {
 	align-items: center;
 }
