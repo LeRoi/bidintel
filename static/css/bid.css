@@ -1,17 +1,24 @@
 .autocomplete {
 	float: left;
-	padding-right: 18px;
+	margin-right: 18px;
 }
 
 #bidlist .bid-card {
 	display: flex;
 	justify-content: flex-start;
 	margin-bottom: 24px;
-	width: 35%;
 }
 
 .buttons {
 	padding-bottom: 12px;
+}
+
+md-list > md-list-item.md-3-line > div.md-list-item-inner {
+	align-items: center;
+}
+
+div > md-checkbox {
+	margin-bottom: 0;
 }
 
 .padding {
@@ -21,4 +28,5 @@
 
 .remove-button {
 	margin-left: auto;
+	align-self: flex-start;
 }

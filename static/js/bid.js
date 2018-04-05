@@ -1,7 +1,13 @@
-var app = angular.module('bidintel', ['dndLists', 'ngMaterial']);
+var app = angular.module('bidintel', ['dndLists', 'ngMaterial', 'ngMessages']);
 app.controller('bidController', function($http) {
 	var self = this;
-	self.bids = [];
+	self.courseTypes = ["Elective", "Multisection", "Clinic", "International"];
+	self.terms = ["Fall", "Winter", "Spring", "Full Year"];
+	self.ALL_TERMS = 3; // Index of "Full Year"
+	
+	self.year = 18;
+	
+	self.bids = [{}];
 	$http.get('/data/professors').then(function(data) {
 		self.professors = data.data['professors'];
 	});
@@ -29,9 +35,28 @@ app.controller('bidController', function($http) {
 		return courseMap;
 	}
 	
+	self.getCourse = function(professorId) {
+		return self.courses[self.fullCourses['professorToCourse'][professorId]];
+	}
+	
+	self.getProfessor = function(courseId) {
+		return self.professors[self.fullCourses['courseToProfessor'][courseId]];
+	}
+	
+	self.updateTerm = function() {
+		if (self.term == self.oldTerm || self.term == self.ALL_TERMS) return;
+		
+		// Put a warning here.
+		for (i = 0; i < self.bids.length; i++) {
+			if (self.bids[i]['term'] != self.term) self.bids[i] = self.makeBid();
+		}
+	}
+	
 	self.searchCourses = function(query, index) {
 		var validCourses = self.courses.filter(
 			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
+		validCourses = validCourses.filter(self.isInTerm(self.term));
+		validCourses = validCourses.filter(self.isInTerm(self.bids[index]['term']));
 		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
 	}
 	
@@ -59,12 +84,30 @@ app.controller('bidController', function($http) {
 		}
 	}
 	
+	self.isInTerm = function(term) {
+		return function isInTermFilter(item) {
+			return term === undefined || term == self.ALL_TERMS || item['type'] == term;
+		}
+	}
+	
 	self.addBid = function() {
-		self.bids.push({});
+		self.bids.push(self.makeBid());
+	}
+	
+	self.makeBid = function() {
+		if (self.term === undefined || self.term == self.ALL_TERMS) return {};
+		return {
+			'term': self.term,
+			'termName': self.terms[self.term],
+		};
 	}
 	
 	self.removeBid = function(index=0) {
 		self.bids.splice(index, 1);
+	}
+	
+	self.updateBidTerm = function(index) {
+		self.bids[index]['term'] = self.terms.indexOf(self.bids[index]['termName']);
 	}
 	
 	self.submit = function() {

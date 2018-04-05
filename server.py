@@ -1,7 +1,7 @@
 import flask, json, os
 from flask import jsonify, Flask, Response, request, render_template
 
-import lib.structure
+import lib.structure as struct
 import lib.sql_interface as sql
 from lib.constants import *
 from lib.logic import *
@@ -25,17 +25,17 @@ def add_row(table, data):
 def format_data(table, form, next_id):
     print '\tFormatting (ID=%d) %s for Table %s' % (next_id, str(form), str(sql.Tables(table)))
     if table == sql.Tables.PROFESSORS:
-        return lib.structure.Professor(next_id, form['professor'])
+        return struct.Professor(next_id, form['professor'])
     elif table == sql.Tables.COURSES:
-        return lib.structure.Course(next_id, form['course_name'],
+        return struct.Course(next_id, form['course_name'],
                                     int(form['course_type']))
     elif table == sql.Tables.FULL_COURSES:
-        return lib.structure.FullCourse(next_id, int(form['course_id']),
+        return struct.FullCourse(next_id, int(form['course_id']),
                                         csv_to_ids(form['professor_ids']))
     elif table == sql.Tables.USERS:
-        return lib.structure.User(next_id, csv_to_ids(['bids']))
+        return struct.User(next_id, csv_to_ids(['bids']))
     elif table == sql.Tables.BIDS:
-        return lib.structure.Bid(next_id, int(form['term']),
+        return struct.Bid(next_id, int(form['term']),
                                  int(form['year']), int(form['position']))
   
 @app.route('/')
@@ -78,14 +78,18 @@ def ngtest():
 def bid():
     return Response(render_template('bid.html'))
 
+@app.route('/bid/text_entry')
+def bid_text_entry():
+    return Response(render_template('bid_text_entry.html'))
+
 @app.route('/update')
 def update_db():
     return Response(render_template('update_db.html'))
 
 @app.route('/submit_rows', methods=['POST'])
 def submit_rows():
-    form = to_ascii(request.form)
-    table = int(form['table'])
+    form = json.loads(request.data)
+    table = form['table']
     db = sql.sql_connect(DATABASE_PATH)
     next_id = sql.get_next_id(db, table)
     sql.update_next_id(db, table, next_id + 1)
@@ -94,8 +98,14 @@ def submit_rows():
     return json.dumps({'status':'OK'})
 
 @app.route('/submit_bids', methods=['POST'])
-def submit():
+def submit_bids():
     print 'Received data: %s' % str(request.data)
+    return json.dumps({'status':'OK'})
+
+@app.route('/submit_bid_text', methods=['POST'])
+def submit_bid_text():
+    print 'Received data for bid text: %s' % str(request.data)
+    print 'Understood as %s' % str(struct.email_to_bid_data(to_ascii_simple(request.data)))
     return json.dumps({'status':'OK'})
 
 setup_server()
