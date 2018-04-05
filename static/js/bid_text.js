@@ -1,2 +1,3 @@
-function parse_bid_text() {
+function parse_bid_text(string) {
+	
 }

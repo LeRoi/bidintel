@@ -1,8 +1,16 @@
+// TODO: (P3) validate against duplicate classes (cID, pID, term)
+// TODO: (P0) email entry form
+// TODO: (P0) make submit actually work
+
 var app = angular.module('bidintel', ['dndLists', 'ngMaterial', 'ngMessages']);
 app.controller('bidController', function($http) {
 	var self = this;
 	self.courseTypes = ["Elective", "Multisection", "Clinic", "International"];
+	self.ELECTIVE = 0;
+	self.INTERNATIONAL = 3;
+	
 	self.terms = ["Fall", "Winter", "Spring", "Full Year"];
+	self.SPRING = 2;
 	self.ALL_TERMS = 3; // Index of "Full Year"
 	
 	self.year = 18;
@@ -43,10 +51,28 @@ app.controller('bidController', function($http) {
 		return self.professors[self.fullCourses['courseToProfessor'][courseId]];
 	}
 	
-	self.updateTerm = function() {
+	self.updateCourseType = function() {
+		if (self.courseType == self.oldCourseType) return;
+		
+		self.oldTerm = self.term;
+		if (self.courseType == self.ELECTIVE && self.term == self.ALL_TERMS) self.term = undefined;
+		if (self.courseType != self.ELECTIVE) self.term = self.ALL_TERMS;
+		if (self.courseType == self.INTERNATIONAL) self.term = self.SPRING;
+		self.updateTerm(bypass=true);
+		
+		// Put a warning here.
+		for (i = 0; i < self.bids.length; i++) {
+			if (self.courses[self.bids[i]['selectedCourse']]['type'] != self.courseType) {
+				self.bids[i] = self.makeBid();
+			}
+		}
+	}
+	
+	self.updateTerm = function(bypass=false) {
 		if (self.term == self.oldTerm || self.term == self.ALL_TERMS) return;
 		
 		// Put a warning here.
+		if (bypass) console.log('bypassed protection');
 		for (i = 0; i < self.bids.length; i++) {
 			if (self.bids[i]['term'] != self.term) self.bids[i] = self.makeBid();
 		}
@@ -55,8 +81,9 @@ app.controller('bidController', function($http) {
 	self.searchCourses = function(query, index) {
 		var validCourses = self.courses.filter(
 			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
-		validCourses = validCourses.filter(self.isInTerm(self.term));
-		validCourses = validCourses.filter(self.isInTerm(self.bids[index]['term']));
+		/*validCourses = validCourses.filter(self.isInTerm(self.term));
+		validCourses = validCourses.filter(self.isInTerm(self.bids[index]['term']));*/
+		validCourses = validCourses.filter(self.isInType);
 		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
 	}
 	
@@ -84,10 +111,15 @@ app.controller('bidController', function($http) {
 		}
 	}
 	
+	// Don't actually know when courses are offered...can't validate.
 	self.isInTerm = function(term) {
 		return function isInTermFilter(item) {
 			return term === undefined || term == self.ALL_TERMS || item['type'] == term;
 		}
+	}
+	
+	self.isInType = function(course) {
+		return self.courseType === undefined || self.courseType == course['type'];
 	}
 	
 	self.addBid = function() {

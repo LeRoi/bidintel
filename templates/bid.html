@@ -14,7 +14,10 @@
 	<div class="dropdowns">
 		<md-input-container style="padding-right: 24px">
 			<label>Class Type</label>
-			<md-select ng-model="ctrl.courseType" class="md-no-underline">
+			<md-select ng-model="ctrl.courseType"
+				class="md-no-underline"
+				md-on-open="ctrl.oldCourseType = ctrl.courseType"
+				md-on-close="ctrl.updateCourseType()">
 				<md-option ng-repeat="course in ctrl.courseTypes" ng-value=ctrl.courseTypes.indexOf(course)>
 					{{'{{course}}'}}
 				</md-option>
@@ -25,7 +28,8 @@
 			<md-select ng-model="ctrl.term"
 				class="md-no-underline"
 				md-on-open="ctrl.oldTerm = ctrl.term"
-				md-on-close="ctrl.updateTerm()">
+				md-on-close="ctrl.updateTerm()"
+				ng-disabled="ctrl.courseType !== undefined && ctrl.courseType != ctrl.ELECTIVE">
 				<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
 					{{'{{term}}'}}
 				</md-option>
@@ -52,7 +56,9 @@
 			dnd-selected="models.selected = bid"
 			ng-class="{'selected': models.selected === bid}"
 			style="display: flex; border-bottom: 0.5px solid; margin-bottom: 4px; align-items: center;">
-				<md-icon md-svg-icon="static/svg/ic_apps_black_24px.svg" style="margin-left: 0; margin-right: 8px"></md-icon>
+				<md-icon md-svg-icon="static/svg/ic_apps_black_24px.svg"
+					style="margin-left: 0; margin-right: 8px; cursor: pointer">
+				</md-icon>
 				<md-autocomplete
 					  md-no-cache=true
 					  md-selected-item="bid['selectedCourse']"
