@@ -9,13 +9,6 @@ from lib.logic import *
 app = Flask(__name__)
 debug = True
 
-def setup_server():
-    first_run = not os.path.exists(DATABASE_PATH)
-    db = sql.sql_connect(DATABASE_PATH)
-    if first_run:
-        sql.create_tables(db)
-    db.close()
-
 def add_row(table, data):
     db = sql.sql_connect(DATABASE_PATH)
     sql.insert_row(db, table, data)
@@ -108,7 +101,8 @@ def submit_bid_text():
     print 'Understood as %s' % str(struct.email_to_bid_data(to_ascii_simple(request.data)))
     return json.dumps({'status':'OK'})
 
-setup_server()
+## The database should always already exist.
+## setup_server()
 if __name__ == '__main_':
     port = int(os.envion.get('PORT', Server.PORT))
     app.run(host=Server.HOST, port=port, debug=debug)

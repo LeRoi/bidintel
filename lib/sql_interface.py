@@ -97,11 +97,14 @@ def create_tables(db):
         cursor.execute(SQL.INSERT.INSERT_NEXT_ID % (i, 1000))
     db.commit()
 
-####
+## RUN ONCE END ##
 
 def query(cursor, query, debug=True):
     if debug:
-        print '\t%s' % query
+        try:
+            print '\t%s' % query
+        except:
+            print '[Silently failed to print: %s]' % query
     cursor.execute(query)
 
 def get_next_id(db, table):
@@ -109,13 +112,14 @@ def get_next_id(db, table):
     query(cursor, 'SELECT nextId FROM nextIds WHERE id = %d' % table)
     return cursor.fetchone()[0]
 
+## Should probably be linked with insert operations...
 def update_next_id(db, table, nextId):
     cursor = db.cursor()
     query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' % (nextId, table))
     db.commit()
 
-def fetch_table(table):
-    db = sql_connect(constants.DATABASE_PATH)
+def fetch_table(table, src=constants.DATABASE_PATH):
+    db = sql_connect(src)
     cursor = db.cursor()
     query(cursor, SQL.SELECT_ALL % SQL.TABLE_MAP[table])
     result = [line for line in cursor.fetchall()]
