@@ -8,9 +8,11 @@ from lib.logic import *
 
 app = Flask(__name__)
 debug = True
+database_src = 'dev/data/bidintel_dev.db'
+#database_src = DATABASE_PATH
 
 def add_row(table, data):
-    db = sql.sql_connect(DATABASE_PATH)
+    db = sql.sql_connect(database_src)
     sql.insert_row(db, table, data)
     db.close()
 
@@ -39,7 +41,7 @@ def home():
 @app.route('/data/professors')
 def professors():
     professors = []
-    for result in sql.fetch_table(sql.Tables.PROFESSORS):
+    for result in sql.fetch_table(database_src, sql.Tables.PROFESSORS):
         professors.append({'id': result[0],
                            'name': result[1]})
     return json.dumps({'professors': professors})
@@ -47,7 +49,7 @@ def professors():
 @app.route('/data/courses')
 def courses():
     courses = []
-    for result in sql.fetch_table(sql.Tables.COURSES):
+    for result in sql.fetch_table(database_src, sql.Tables.COURSES):
         courses.append({'id': result[0],
                         'type': result[1],
                         'name': result[2]})
@@ -56,7 +58,7 @@ def courses():
 @app.route('/data/fullcourses')
 def fullcourses():
     fullcourses = []
-    for result in sql.fetch_table(sql.Tables.FULL_COURSES):
+    for result in sql.fetch_table(database_src, sql.Tables.FULL_COURSES):
         fullcourses.append({'id': result[0],
                         'cid': result[1],
                         'pids': csv_to_ids(result[2])})
@@ -83,7 +85,7 @@ def update_db():
 def submit_rows():
     form = json.loads(request.data)
     table = form['table']
-    db = sql.sql_connect(DATABASE_PATH)
+    db = sql.sql_connect(database_src)
     next_id = sql.get_next_id(db, table)
     sql.update_next_id(db, table, next_id + 1)
     db.close()

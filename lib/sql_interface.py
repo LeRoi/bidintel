@@ -118,7 +118,7 @@ def update_next_id(db, table, nextId):
     query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' % (nextId, table))
     db.commit()
 
-def fetch_table(table, src=constants.DATABASE_PATH):
+def fetch_table(src, table):
     db = sql_connect(src)
     cursor = db.cursor()
     query(cursor, SQL.SELECT_ALL % SQL.TABLE_MAP[table])
