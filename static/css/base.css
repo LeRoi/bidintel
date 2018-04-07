@@ -1,0 +1,10 @@
+.clearfix::after {
+	content: "";
+	clear: both;
+	display: table;
+}
+
+.padded {
+	margin-left: 12px;
+	margin-top: 12px;
+}

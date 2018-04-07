@@ -1,145 +1,138 @@
-<title>bidintel</title>
-<head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular.min.js"></script>
-	
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	
-	<!-- Angular Material -->
-	<link rel="stylesheet" href="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.css">
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-animate.js"></script>
-    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.4/angular-aria.js"></script>
-	<script src="https://gitcdn.xyz/repo/angular/bower-material/master/angular-material.js"></script>
-	
-	<!-- Material -->
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="/static/css/materialize.min.css">
-	
-</head>
-
-<script>
-var app = angular.module('bidintel', ['ngMaterial']);
-app.controller('bidController', function($http) {
-	var self = this;
-	self.bids = [];
-	$http.get('/data/professors').then(function(data) {
-		self.professors = data.data['professors'];
-	});
-	$http.get('/data/courses').then(function(data) {
-		self.courses = data.data['courses'];
-	});
-	$http.get('/data/fullcourses').then(function(data) {
-		self.fullCourses = self.fullCoursesToMap(data.data['fullcourses']);
-	});
-	
-	self.fullCoursesToMap = function(fullCourseData) {
-		var courseMap = {'courseToProfessor':{}, 'professorToCourse':{}};
-		for (i = 0; i < fullCourseData.length; i++) {
-			var result = fullCourseData[i];
-			courseMap['courseToProfessor'][result['cid']] = result['pids'];
-			for (j = 0; j < result['pids'].length; j++) {
-				var professorId = result['pids'][j];
-				if (!(professorId in courseMap['professorToCourse'])) {
-					courseMap['professorToCourse'][professorId] = [];
-				}
-				courseMap['professorToCourse'][professorId].push(result['cid']);
-			}
-		}
-		return courseMap;
-	}
-	
-	self.searchCourses = function(query, index) {
-		var validCourses = self.courses.filter(
-			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
-		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
-	}
-	
-	self.searchProfessors = function(query, index) {
-		var validProfessors = self.professors.filter(
-			self.teaches(self.bids[index]['selectedCourse'], self.fullCourses['courseToProfessor']));
-		return query ? validProfessors
-			.filter(self.fuzzyFind(query, 'name')) : validProfessors;
-	}
-	
-	self.fuzzyFind = function(query, field) {
-		// TODO: make this actual fuzzy find.
-		var lowerQuery = angular.lowercase(query);
-		return function fuzzyFilter(item) {
-			return item[field].toLowerCase().includes(lowerQuery);
-		}
-	}
-	
-	// courseData is a professor or a course.
-	self.teaches = function(courseData, courseMap) {
-		return function teachFilter(item) {
-			if (!courseData) return true;
-			if (!(courseData['id'] in courseMap)) return false;
-			return courseMap[courseData['id']].includes(item['id']);
-		}
-	}
-	
-	self.addBid = function() {
-		self.bids.push({});
-	}
-	
-	self.removeBid = function(index=0) {
-		self.bids.splice(index, 1);
-	}
-	
-	self.submit = function() {
-		$http.post('/submit_bids', self.bids)
-			.then(function onSuccess(response) {
-			console.log('Bids submitted successfully.');
-		}, function onError(response) {
-			console.log('Error submitting bids.');
-		});
-	}
-});
-</script>
-<body>
-<script type="text/javascript" src="/static/js/materialize.min.js"></script>
+{% extends "base.html" %}
+{% block head %}
+<!-- Drag and Drop Lists -->
 <script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
+<link rel="stylesheet" href="/static/css/drag-drop.css">
 
-<div style="margin-top: 24px; margin-left: 24px;" ng-app="bidintel" ng-controller="bidController as ctrl">
-	<div style="margin-bottom: 12px;">
-		<button class="waves-effect waves-light btn" ng-click="ctrl.addBid()">Add Bid</button>
-		<button class="waves-effect waves-light btn" ng-click="ctrl.submit()">Submit</button>
+<!-- page specific: load after angular -->
+<script src="/static/js/bid.js"></script>
+<link rel="stylesheet" href="/static/css/bid.css">
+{% endblock %}
+
+{% block body %}
+<div class="padding" ng-app="bidintel" ng-controller="bidController as ctrl">
+	<div class="dropdowns">
+		<md-input-container style="padding-right: 24px">
+			<label>Class Type</label>
+			<md-select ng-model="ctrl.courseType"
+				class="md-no-underline"
+				md-on-open="ctrl.oldCourseType = ctrl.courseType"
+				md-on-close="ctrl.updateCourseType()">
+				<md-option ng-repeat="course in ctrl.courseTypes" ng-value=ctrl.courseTypes.indexOf(course)>
+					{{'{{course}}'}}
+				</md-option>
+			</md-select>
+		</md-input-container>
+		<md-input-container style="padding-right: 24px">
+			<label>Term</label>
+			<md-select ng-model="ctrl.term"
+				class="md-no-underline"
+				md-on-open="ctrl.oldTerm = ctrl.term"
+				md-on-close="ctrl.updateTerm()"
+				ng-disabled="ctrl.courseType !== undefined && ctrl.courseType != ctrl.ELECTIVE">
+				<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
+					{{'{{term}}'}}
+				</md-option>
+			</md-select>
+		</md-input-container>
+		<div style="padding-right: 16px;">
+			20<input ng-model="ctrl.year" type="number" style="width: 50px"></input>-{{'{{ctrl.year+1}}'}}
+		</div>
+		<md-checkbox ng-model="ctrl.hasResults">Results are out</md-checkbox>
 	</div>
-	<div ng-repeat="bid in ctrl.bids">
-		<md-autocomplete
-			  style="width: 300px; margin-right: 24px;"
-			  md-no-cache=true
-			  md-selected-item="bid['selectedCourse']"
-			  md-search-text="bid['courseSearchText']"
-			  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
-			  md-item-text="course['name']"
-			  md-min-length="0"
-			  placeholder="Course">
-			<md-item-template>
-				<span>{{ '{{course["name"]}}' }}</span>
-			</md-item-template>
-			<md-not-found>
-				No matching courses found.
-			</md-not-found>
-		</md-autocomplete>
-		<md-autocomplete
-			  style="width: 300px;"
-			  md-no-cache=true
-			  md-selected-item="bid['selectedProfessor']"
-			  md-search-text="bid['professorSearchText']"
-			  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
-			  md-item-text="professor['name']"
-			  md-min-length="0"
-			  placeholder="Professor">
-			<md-item-template>
-				<span>{{ '{{professor["name"]}}' }}</span>
-			</md-item-template>
-			<md-not-found>
-				No matching professors found.
-			</md-not-found>
-		</md-autocomplete>
-		<button style="margin-bottom: 24px;" class="waves-effect waves-light btn" ng-click="ctrl.removeBid($index)">Remove</button>
+	<div class="buttons">
+		<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
+		<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
+		<md-button class="md-raised md-primary"
+			ng-click="ctrl.showTextEntry = true"
+			onclick="document.getElementById('light').style.display='block';document.getElementById('fade').style.display='block'">
+			Email Entry
+		</md-button>
 	</div>
+	<div id="light"
+		class="white_content">
+		<div class="popup">
+			{% include "popup_bid_text_entry.html" %}
+		</div>
+	</div>
+	<div id="fade"
+		class="black_overlay"
+		onclick="document.getElementById('light').style.display='none';document.getElementById('fade').style.display='none'">
+	</div>
+	
+	<md-list dnd-list="ctrl.bids" id="bidlist" flex>
+		<md-list-item
+			class="md-3-line"
+			ng-repeat="bid in ctrl.bids"
+			dnd-draggable="bid"
+			dnd-moved="ctrl.bids.splice($index, 1)"
+			dnd-effect-allowed="move"
+			dnd-selected="models.selected = bid"
+			ng-class="{'selected': models.selected === bid}"
+			style="display: flex; border-bottom: 0.5px solid; margin-bottom: 4px; align-items: center;">
+				<md-icon md-svg-icon="static/svg/ic_apps_black_24px.svg"
+					style="margin-left: 0; margin-right: 8px; cursor: pointer">
+				</md-icon>
+				<div style="padding-right: 12px; padding-top: 4px;">{{'{{$index + 1}}'}}.</div>
+				<md-autocomplete
+					  md-no-cache=true
+					  md-selected-item="bid['selectedCourse']"
+					  md-search-text="bid['courseSearchText']"
+					  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
+					  md-item-text="course['name']"
+					  md-min-length="0"
+					  placeholder="Course"
+					  class="autocomplete">
+					<md-item-template>
+						<span>{{ '{{course["name"]}}' }}</span>
+					</md-item-template>
+					<md-not-found>
+						<span>No matching courses found.</span>
+					</md-not-found>
+				</md-autocomplete>
+				<md-autocomplete
+					  md-no-cache=true
+					  md-selected-item="bid['selectedProfessor']"
+					  md-search-text="bid['professorSearchText']"
+					  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
+					  md-item-text="professor['name']"
+					  md-min-length="0"
+					  placeholder="Professor"
+					  class="autocomplete md-no-underline">
+					<md-item-template>
+						<span>{{ '{{professor["name"]}}' }}</span>
+					</md-item-template>
+					<md-not-found>
+						<span>No matching professors found.</span>
+					</md-not-found>
+				</md-autocomplete>
+				<md-autocomplete
+					  md-no-cache=true
+					  md-selected-item="bid['termName']"
+					  md-selected-item-change="ctrl.updateBidTerm($index)"
+					  md-items="term in ctrl.terms.slice(0, ctrl.ALL_TERMS)"
+					  md-item-text="term"
+					  md-min-length="0"
+					  placeholder="Term"
+					  class="autocomplete md-no-underline"
+					  ng-disabled="ctrl.term !== undefined && ctrl.term != ctrl.ALL_TERMS">
+					<md-item-template>
+						<span>{{ '{{term}}' }}</span>
+					</md-item-template>
+				</md-autocomplete>
+				<div ng-repeat="i in [0]">
+					<md-checkbox ng-model="bid['gotIn']"
+						ng-disabled="ctrl.hasResults === undefined || !ctrl.hasResults">
+						Got in?
+					</md-checkbox>
+				</div>
+				<md-button class="md-icon-button remove-button"
+					ng-click="ctrl.removeBid($index)"
+					aria-label="Remove bid">
+					<md-icon md-svg-icon="static/svg/ic_close_black_24px.svg"></md-icon>
+				</md-button>
+		</md-list-item>
+	</md-list>
+	* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.
 </div>
-
-</body>
+{% endblock %}

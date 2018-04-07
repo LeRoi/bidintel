@@ -33,6 +33,14 @@ class Course():
         self.name = name
         self.type = course_type
 
+    def __hash__(self):
+        ## This is fine so long as there are not more than ~8000 courses.
+        return hash(self.name) * 100000 + self.type + self.id * 10
+
+    def __eq__(self, other):
+        return other and other.name == self.name and \
+               other.type == self.type and other.id == self.id
+
 class FullCourse():
     def __init__(self, _id, c_id, p_ids):
         self.id = _id
@@ -55,3 +63,17 @@ class Professor():
     def __init__(self, p_id, name):
         self.id = p_id ## int:    unique professor id
         self.name = name ## string: full professor name
+
+def email_to_bid_data(email):
+    lines = email.split('\n')
+    bids = []
+    for line in lines:
+        parts = line.split('\t')
+        components = []
+        for part in parts:
+            subparts = [s.strip() for s in part.split('  ')]
+            components.extend(subparts)
+        components = [c for c in components if c]
+        if len(components) > 0:
+            bids.append(components)
+    return bids

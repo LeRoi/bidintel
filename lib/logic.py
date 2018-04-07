@@ -1,3 +1,6 @@
+def to_ascii_simple(s):
+    return s.decode('utf-8').encode('ascii', 'ignore')
+
 def to_ascii(form):
     result = {}
     for k in form:

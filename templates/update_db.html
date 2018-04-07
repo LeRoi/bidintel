@@ -1,79 +1,64 @@
-<title>bidintel</title>
-<head>
-	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
-	<script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.6.9/angular.min.js"></script>
-	<link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons">
-	<link rel="stylesheet" href="/static/css/materialize.min.css">
-	<!--<link rel="stylesheet" href="/static/css/base.css">-->
-	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-
-<script>
-function submit_bids() {
-	$.ajax({
-		url: '/submitbids',
-		data: $('form').serialize(),
-		type: 'POST',
-		// Remove these eventually.
-		success: function(response) {
-			console.log(response);
-		},
-		error: function(error) {
-			console.log(error);
+{% extends "base.html" %}
+{% block head %}
+	<script>
+	var app = angular.module('bidintel', []);
+	app.controller('bidintelCtrl', function($http) {
+		var self = this;
+		self.choice = 0;
+		self.choices = {
+			0: 'Professor',
+			1: 'Course',
+			2: 'Full Course',
+			3: 'User',
+			4: 'Bid',
+		};
+		self.professors = [];
+		self.form = {}
+		
+		$http.get('/data/professors').then(function(data) {
+			self.professors = data.data['professors'];
+		});
+		
+		self.submit = function() {
+			self.form['table'] = self.choice;
+			$http.post('/submit_rows', self.form)
+				.then(function onSuccess(response) {
+				console.log('Bids submitted successfully.');
+			}, function onError(response) {
+				console.log('Error submitting bids.');
+			});
 		}
 	});
-	//$('form')[0].reset();
-}
-
-var app = angular.module('bidintel', []);
-app.controller('bidintelCtrl', function($scope, $http) {
-	$scope.choice = 0;
-	$scope.choices = {
-		0: 'Professor',
-		1: 'Course',
-		2: 'Full Course',
-		3: 'User',
-		4: 'Bid',
-	};
-	$scope.professors = [];
-	
-	$http.get('/data/professors').then(function(data) {
-		$scope.professors = data.data['professors'];
-	});
-});
-</script>
-<body>
-<script type="text/javascript" src="/static/js/materialize.min.js"></script>
-<script type="text/javascript" src="/static/js/ng-drag-drop/ng-drag-drop.min.js"></script>
-
-<div ng-app="bidintel" ng-controller="bidintelCtrl">
-	<a class='dropdown-trigger btn' href='#' data-target='dropdown1' style="margin-top: 12px; margin-left: 12px">{{ '{{choices[choice]}}' }}</a>
-
+	</script>
+{% endblock %}
+{% block body %}
+<div ng-app="bidintel" ng-controller="bidintelCtrl as ctrl">
+	<a class='dropdown-trigger btn' href='#' data-target='dropdown1' style="margin-top: 12px; margin-left: 12px">
+		{{ '{{ctrl.choices[ctrl.choice]}}' }}
+	</a>
 
 	<ul id='dropdown1' class='dropdown-content'>
-	<li><a ng-click="choice = 0">Professor</a></li>
-	<li><a ng-click="choice = 1">Course</a></li>
-	<li><a ng-click="choice = 2">Full Course</a></li>
-	<li><a ng-click="choice = 3">User</a></li>
-	<li><a ng-click="choice = 4">Bid</a></li>
+		<li><a ng-click="ctrl.choice = 0">Professor</a></li>
+		<li><a ng-click="ctrl.choice = 1">Course</a></li>
+		<li><a ng-click="ctrl.choice = 2">Full Course</a></li>
+		<li><a ng-click="ctrl.choice = 3">User</a></li>
+		<li><a ng-click="ctrl.choice = 4">Bid</a></li>
 	</ul>
+	
 	<form style="margin-top: 12px; margin-left: 12px">
-		<input name="professor" placeholder="Professor" ng-show="choice == 0">
-		<input name="course_name" placeholder="Class name" ng-show="choice == 1">
-		<input name="course_type" placeholder="Class type" ng-show="choice == 1">
-		<input name="professor_ids" placeholder="Professor IDs" ng-show="choice == 2">
-		<input name="course_id" placeholder="Class ID" ng-show="choice == 2">
-		<input name="bids" placeholder="Bids" ng-show="choice == 3">
-		<input name="rank" placeholder="Rank" ng-show="choice == 4">
-		<input name="term" placeholder="Term" ng-show="choice == 4">
-		<input name="year" placeholder="Year" ng-show="choice == 4">
-		<input name="position" placeholder="Position" ng-show="choice == 4">
-		<input hidden name="table" ng-model="choice">
-		<button class="waves-effect waves-light btn" onclick="submit_bids()">Submit</button>
+		<input ng-model="ctrl.form['professor']" placeholder="Professor" ng-show="ctrl.choice == 0">
+		<input ng-model="ctrl.form['course_name']" placeholder="Class name" ng-show="ctrl.choice == 1">
+		<input ng-model="ctrl.form['course_type']" placeholder="Class type" ng-show="ctrl.choice == 1">
+		<input ng-model="ctrl.form['professor_ids']" placeholder="Professor IDs" ng-show="ctrl.choice == 2">
+		<input ng-model="ctrl.form['course_id']" placeholder="Class ID" ng-show="ctrl.choice == 2">
+		<input ng-model="ctrl.form['bids']" placeholder="Bids" ng-show="ctrl.choice == 3">
+		<input ng-model="ctrl.form['rank']" placeholder="Rank" ng-show="ctrl.choice == 4">
+		<input ng-model="ctrl.form['term']" placeholder="Term" ng-show="ctrl.choice == 4">
+		<input ng-model="ctrl.form['year']" placeholder="Year" ng-show="ctrl.choice == 4">
+		<input ng-model="ctrl.form['position']" placeholder="Position" ng-show="ctrl.choice == 4">
+		<input hidden ng-model="ctrl.choice">
+		<button class="waves-effect waves-light btn" ng-click="ctrl.submit()">Submit</button>
 	</form>
-	<div ng-repeat="professor in professors">
-		{{ "{{ professor['name'] }} - {{ professor['id'] }}" }}
-	</div>
 </div>
 
 <script>
@@ -85,4 +70,4 @@ $('input')[1].addEventListener("keyup", function(e) {
 	}
 });
 </script>
-</body>
+{% endblock %}
