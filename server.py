@@ -74,6 +74,10 @@ def fullcourses():
 def bid():
     return Response(render_template('bid.html'))
 
+@app.route('/stats')
+def bid():
+    return Response(render_template('stats.html'))
+
 @app.route('/bid/text_entry')
 def bid_text_entry():
     return Response(render_template('bid_text_entry.html'))
