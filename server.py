@@ -64,11 +64,6 @@ def fullcourses():
                         'pids': csv_to_ids(result[2])})
     return json.dumps({'fullcourses': fullcourses})
 
-## Clean this up later
-@app.route('/ngtest')
-def ngtest():
-    return Response(render_template('ng.html'))
-
 @app.route('/bid')
 def bid():
     return Response(render_template('bid.html'))
@@ -94,9 +89,13 @@ def submit_rows():
 
 @app.route('/submit_bids', methods=['POST'])
 def submit_bids():
-    print 'Received data: %s' % str(request.data)
+    #print 'Received data: %s' % str(request.data)
+    form = json.loads(request.data)
+    for i in form:
+        print i
     return json.dumps({'status':'OK'})
 
+## This is probably no longer needed.
 @app.route('/submit_bid_text', methods=['POST'])
 def submit_bid_text():
     print 'Received data for bid text: %s' % str(request.data)
