@@ -43,7 +43,21 @@
 	<div class="buttons">
 		<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
 		<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
-		<md-button class="md-raised md-primary" ng-click="ctrl.showTextEntry = true">Email Entry</md-button>
+		<md-button class="md-raised md-primary"
+			ng-click="ctrl.showTextEntry = true"
+			onclick="document.getElementById('light').style.display='block';document.getElementById('fade').style.display='block'">
+			Email Entry
+		</md-button>
+	</div>
+	<div id="light"
+		class="white_content">
+		<div class="popup">
+			{% include "popup_bid_text_entry.html" %}
+		</div>
+	</div>
+	<div id="fade"
+		class="black_overlay"
+		onclick="document.getElementById('light').style.display='none';document.getElementById('fade').style.display='none'">
 	</div>
 	
 	<md-list dnd-list="ctrl.bids" id="bidlist" flex>

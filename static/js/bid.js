@@ -2,6 +2,10 @@
 // TODO: (P0) email entry form
 // TODO: (P0) make submit actually work
 
+String.prototype.toProperCase = function () {
+    return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
+};
+
 var app = angular.module('bidintel', ['dndLists', 'ngMaterial', 'ngMessages']);
 app.controller('bidController', function($http) {
 	var self = this;
@@ -12,27 +16,51 @@ app.controller('bidController', function($http) {
 	self.terms = ["Fall", "Winter", "Spring", "Full Year"];
 	self.SPRING = 2;
 	self.ALL_TERMS = 3; // Index of "Full Year"
+	self.shortTerm = ['FA', 'WI', 'SP'];
 	
 	self.year = 18;
 	
 	self.bids = [{}];
 	$http.get('/data/professors').then(function(data) {
-		self.professors = data.data['professors'];
+		// TODO: (P3) Consider sorting professors by last name.
+		self.professors = data.data['professors'].sort((l, r) => {
+			if (l['name'] < r['name']) return -1;
+			if (l['name'] > r['name']) return 1;
+			return 0;
+		});;
+		self.professorNameMap = self.nameToDataMap(self.professors);
 	});
 	$http.get('/data/courses').then(function(data) {
-		self.courses = data.data['courses'];
+		self.courses = data.data['courses'].sort((l, r) => {
+			if (l['name'] < r['name']) return -1;
+			if (l['name'] > r['name']) return 1;
+			return 0;
+		});
+		self.courseNameMap = self.nameToDataMap(self.courses);
 	});
 	$http.get('/data/fullcourses').then(function(data) {
 		self.fullCourses = self.fullCoursesToMap(data.data['fullcourses']);
 	});
 	
+	self.nameToDataMap = function(data) {
+		var nameMap = {};
+		for (i = 0; i < data.length; i++) {
+			nameMap[data[i]['name']] = data[i];
+		}
+		return nameMap;
+	}
+	
 	self.fullCoursesToMap = function(fullCourseData) {
 		var courseMap = {'courseToProfessor':{}, 'professorToCourse':{}};
 		for (i = 0; i < fullCourseData.length; i++) {
 			var result = fullCourseData[i];
-			courseMap['courseToProfessor'][result['cid']] = result['pids'];
+			if (!(result['cid'] in courseMap['courseToProfessor'])) {
+				courseMap['courseToProfessor'][result['cid']] = [];
+			}
+			courseMap['courseToProfessor'][result['cid']].push(parseInt(result['pids']));
 			for (j = 0; j < result['pids'].length; j++) {
-				// TODO: Treat joint professors correctly and group them together.
+				// TODO: (P3) Treat joint professors correctly and group them together.
+				// Joint professors currently not supported by the backend; low priority.
 				var professorId = result['pids'][j];
 				if (!(professorId in courseMap['professorToCourse'])) {
 					courseMap['professorToCourse'][professorId] = [];
@@ -41,14 +69,6 @@ app.controller('bidController', function($http) {
 			}
 		}
 		return courseMap;
-	}
-	
-	self.getCourse = function(professorId) {
-		return self.courses[self.fullCourses['professorToCourse'][professorId]];
-	}
-	
-	self.getProfessor = function(courseId) {
-		return self.professors[self.fullCourses['courseToProfessor'][courseId]];
 	}
 	
 	self.updateCourseType = function() {
@@ -95,7 +115,7 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.fuzzyFind = function(query, field) {
-		// TODO: make this actual fuzzy find.
+		// TODO: (P3) Make this actual fuzzy find.
 		var lowerQuery = angular.lowercase(query);
 		return function fuzzyFilter(item) {
 			return item[field].toLowerCase().includes(lowerQuery);
@@ -140,6 +160,54 @@ app.controller('bidController', function($http) {
 	
 	self.updateBidTerm = function(index) {
 		self.bids[index]['term'] = self.terms.indexOf(self.bids[index]['termName']);
+	}
+	
+	self.lSplitOnce = function(string, delimiter) {
+		var i = string.indexOf(delimiter);
+		return [string.slice(0,i), string.slice(i+delimiter.length)];
+	}
+	
+	self.parse_bid_text = function() {
+		if (self.bid_text_entry === undefined || self.bid_text_entry.length == 0) return;
+		lines = self.bid_text_entry.split('\n').filter((x) => x.length > 0 && x.charCodeAt(0) == 183);
+		while (self.bids.length < lines.length) {
+			self.addBid();
+		}
+		
+		for (i = 0; i < lines.length; i++) {
+			parts = lines[i].split(/\s{2,}/);
+				
+			termParts = parts[1].split(':');
+			yearTerm = termParts[termParts.length - 1].trim();
+			year = parseInt(yearTerm.substr(0, 4));
+			term = self.shortTerm.indexOf(yearTerm.substr(4, yearTerm.length));
+			if (term == self.SPRING) year--;
+			self.year = year - 2000;
+			
+			courseParts = self.lSplitOnce(parts[2], (':'));
+			course = courseParts[courseParts.length - 1].trim();
+			
+			// Trim out middle names in future or better, fuzzy find to name.
+			professorParts = parts[3].split(':');
+			professor = professorParts[professorParts.length - 1].trim();
+			firstLast = professor.split(",");
+			professor = firstLast[1].trim() + " " + firstLast[0];
+			firstMiddleLast = professor.split(' ');
+			professorFL = firstMiddleLast.length <= 3 ?
+				firstMiddleLast[0] + " " + firstMiddleLast[2] :
+				firstMiddleLast[0] + " " + firstMiddleLast[1] + " " + firstMiddleLast[3] +
+					" " + firstMiddleLast[2].toProperCase() + ".";
+			pData = self.professorNameMap[professor] === undefined ?
+				self.professorNameMap[professorFL] : self.professorNameMap[professor];
+			
+			// Should use the priority instead just in case.
+			self.bids[i] = {'termName': self.terms[term],
+							'term': term,
+							'selectedCourse': self.courseNameMap[course],
+							'selectedProfessor': pData,}
+			
+			//console.log("Found bid for '" + course + "' by " + professor + " for " + self.terms[term] + " " + year);
+		}
 	}
 	
 	self.submit = function() {

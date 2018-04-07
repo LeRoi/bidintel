@@ -33,6 +33,14 @@ class Course():
         self.name = name
         self.type = course_type
 
+    def __hash__(self):
+        ## This is fine so long as there are not more than ~8000 courses.
+        return hash(self.name) * 100000 + self.type + self.id * 10
+
+    def __eq__(self, other):
+        return other and other.name == self.name and \
+               other.type == self.type and other.id == self.id
+
 class FullCourse():
     def __init__(self, _id, c_id, p_ids):
         self.id = _id
