@@ -78,14 +78,6 @@ def bid():
 def bid():
     return Response(render_template('stats.html'))
 
-@app.route('/bid/text_entry')
-def bid_text_entry():
-    return Response(render_template('bid_text_entry.html'))
-
-@app.route('/update')
-def update_db():
-    return Response(render_template('update_db.html'))
-
 @app.route('/submit_rows', methods=['POST'])
 def submit_rows():
     form = json.loads(request.data)
