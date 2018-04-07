@@ -47,7 +47,7 @@ class FullCourse():
         self.c_id = c_id
         self.p_ids = p_ids
 
-class Term():
+class CTerm():
     def __init__(self, year, term):
         self.year = year ## int
         self.term = term ## Term

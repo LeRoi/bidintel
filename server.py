@@ -11,6 +11,12 @@ debug = True
 database_src = 'dev/data/bidintel_dev.db'
 #database_src = DATABASE_PATH
 
+full_course_reference = {}
+for result in sql.fetch_table(database_src, sql.Tables.FULL_COURSES):
+    full_course_reference[result[0]] = {
+        'c_id': result[1],
+        'p_ids': csv_to_ids(result[2])}
+
 def add_row(table, data):
     db = sql.sql_connect(database_src)
     sql.insert_row(db, table, data)
@@ -91,8 +97,33 @@ def submit_rows():
 def submit_bids():
     #print 'Received data: %s' % str(request.data)
     form = json.loads(request.data)
-    for i in form:
-        print i
+    bid_data = form['bids']
+    user_id = 3
+    db = sql.sql_connect(database_src)
+    cursor = db.cursor()
+    next_bid_id = sql.get_next_id(db, sql.Tables.BIDS)
+    for i in range(len(bid_data)):
+        bid = bid_data[i]
+        print bid
+        ## May need to add bid batch concept for retrieval
+        ## Or just have different columns in user tables...
+        course_id = bid['selectedCourse']['id']
+        prof_id = bid['selectedProfessor']['id']
+        full_id = -1
+        for k in full_course_reference:
+            v = full_course_reference[k]
+            if v['c_id'] == course_id and prof_id in v['p_ids']:
+                full_id = k
+        got_in = int(bid['gotIn'] if 'gotIn' in bid else False)
+        sql.query(cursor, sql.SQL.INSERT.INSERT_BID %
+                  (next_bid_id, full_id, bid['term'],
+                   form['year'] + (1 if bid['term'] == struct.Term.SPRING else 0),
+                   i + 1, got_in, -1))
+        next_bid_id += 1
+    sql.query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' %
+          (next_bid_id, sql.Tables.BIDS))
+    db.commit()
+    db.close()
     return json.dumps({'status':'OK'})
 
 ## This is probably no longer needed.

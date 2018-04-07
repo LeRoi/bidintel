@@ -211,7 +211,7 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.submit = function() {
-		$http.post('/submit_bids', self.bids)
+		$http.post('/submit_bids', {'bids': self.bids, 'year': 2000 + self.year})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');
 		}, function onError(response) {
