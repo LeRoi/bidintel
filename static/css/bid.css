@@ -27,11 +27,6 @@ div > md-checkbox {
 	margin-bottom: 0;
 }
 
-.padding {
-	padding-left: 24px;
-	padding-top: 24px;
-}
-
 .remove-button {
 	margin-left: auto;
 	align-self: flex-start;

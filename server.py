@@ -75,7 +75,7 @@ def bid():
     return Response(render_template('bid.html'))
 
 @app.route('/stats')
-def bid():
+def stats():
     return Response(render_template('stats.html'))
 
 @app.route('/submit_rows', methods=['POST'])
