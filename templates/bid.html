@@ -5,6 +5,7 @@
 <link rel="stylesheet" href="/static/css/drag-drop.css">
 
 <!-- page specific: load after angular -->
+<script src="/static/js/common_bid.js"></script>
 <script src="/static/js/bid.js"></script>
 <link rel="stylesheet" href="/static/css/bid.css">
 {% endblock %}
@@ -13,7 +14,7 @@
 <div class="padding" ng-app="bidintel" ng-controller="bidController as ctrl">
 	<div class="dropdowns">
 		<md-input-container style="padding-right: 24px">
-			<label>Class Type</label>
+			<label>Course Type</label>
 			<md-select ng-model="ctrl.courseType"
 				class="md-no-underline"
 				md-on-open="ctrl.oldCourseType = ctrl.courseType"
@@ -42,12 +43,12 @@
 	</div>
 	<div class="buttons">
 		<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
-		<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
 		<md-button class="md-raised md-primary"
 			ng-click="ctrl.showTextEntry = true"
 			onclick="document.getElementById('light').style.display='block';document.getElementById('fade').style.display='block'">
-			Email Entry
+			Email Entry (Fast!!)
 		</md-button>
+		<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
 	</div>
 	<div id="light"
 		class="white_content">
@@ -133,6 +134,7 @@
 				</md-button>
 		</md-list-item>
 	</md-list>
-	* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.
+	* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.<br>
+	* Professor Sullivan's TAW will require you to manually enter him as the course's professor when using email entry.
 </div>
 {% endblock %}

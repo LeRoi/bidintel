@@ -1,0 +1,101 @@
+{% extends "base.html" %}
+{% block head %}
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/2.7.2/Chart.min.js"></script>
+
+<script src="/static/js/common_bid.js"></script>
+<script src="/static/js/stats.js"></script>
+<link rel="stylesheet" href="/static/css/stats.css">
+{% endblock %}
+
+{% block body %}
+<div class="padding" ng-app="bidintelStats" ng-controller="bidStatsController as ctrl">
+	<div class="controls" style="display: flex; justify-content: flex-start; align-items: center;">
+		<md-input-container style="padding-right: 24px">
+			<label>Start Term</label>
+			<md-select ng-model="ctrl.startTerm"
+				class="md-no-underline">
+				<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
+					{{'{{term}}'}}
+				</md-option>
+			</md-select>
+		</md-input-container>
+		
+		<div style="padding-right: 16px;">
+			<input ng-model="ctrl.startYear" type="number" style="width: 75px"></input>
+		</div>
+		
+		<span style="padding-right: 8px">to</span>
+		
+		<md-input-container style="padding-right: 24px">
+			<label>End Term</label>
+			<md-select ng-model="ctrl.endTerm"
+				class="md-no-underline">
+				<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
+					{{'{{term}}'}}
+				</md-option>
+			</md-select>
+		</md-input-container>
+		
+		<div style="padding-right: 16px;">
+			<input ng-model="ctrl.endYear" type="number" style="width: 75px"></input>
+		</div>
+		
+		<!-- TODO: (P4) When clicking x on courseType, actually reset it to undefined? -->
+		<md-autocomplete
+			  md-no-cache=true
+			  md-selected-item="ctrl.courseTypeText"
+			  md-search-text="ctrl.courseTypeSearchText"
+			  md-items="courseType in ctrl.searchCourseTypes(ctrl.courseTypeSearchText)"
+			  md-item-text="courseType"
+			  md-min-length="0"
+			  placeholder="Course Type"
+			  class="autocomplete">
+			<md-item-template>
+				<span>{{ '{{courseType}}' }}</span>
+			</md-item-template>
+			<md-not-found>
+				<span>No matching courses type found.</span>
+			</md-not-found>
+		</md-autocomplete>
+		<md-autocomplete
+			  md-no-cache=true
+			  md-selected-item="ctrl.course"
+			  md-search-text="ctrl.courseSearchText"
+			  md-items="course in ctrl.searchCourses(ctrl.courseSearchText)"
+			  md-item-text="course['name']"
+			  md-min-length="0"
+			  placeholder="Course"
+			  class="autocomplete">
+			<md-item-template>
+				<span>{{ '{{course["name"]}}' }}</span>
+			</md-item-template>
+			<md-not-found>
+				<span>No matching courses found.</span>
+			</md-not-found>
+		</md-autocomplete>
+		<md-autocomplete
+			  md-no-cache=true
+			  md-selected-item="ctrl.professor"
+			  md-search-text="ctrl.professorSearchText"
+			  md-items="professor in ctrl.searchProfessors(ctrl.professorSearchText)"
+			  md-item-text="professor['name']"
+			  md-min-length="0"
+			  placeholder="Professor"
+			  class="autocomplete md-no-underline">
+			<md-item-template>
+				<span>{{ '{{professor["name"]}}' }}</span>
+			</md-item-template>
+			<md-not-found>
+				<span>No matching professors found.</span>
+			</md-not-found>
+		</md-autocomplete>
+		<md-button class="md-raised md-primary" ng-click="ctrl.render()">Render</md-button>
+	</div>
+
+	<div style="display: flex">
+		<div class="chart">
+			<canvas id="{{'{{ctrl.COUNT_CHART}}'}}" width="400" height="400"></canvas>
+		</div>
+	</div>
+</div>
+{% endblock %}

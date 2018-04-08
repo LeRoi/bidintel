@@ -99,13 +99,15 @@ def create_tables(db):
 
 ## RUN ONCE END ##
 
-def query(cursor, query, debug=True):
+def query(cursor, query, debug=True, is_mock=False):
     if debug:
         try:
-            print '\t%s' % query
+            print ('[MOCK] ' if is_mock else '') + '\t%s' % query
         except:
-            print '[Silently failed to print: %s]' % query
-    cursor.execute(query)
+            print ('[MOCK] ' if is_mock else '') + \
+                  '[Silently failed to print: %s]' % query.encode('ascii', 'ignore')
+    if not is_mock:
+        cursor.execute(query)
 
 def get_next_id(db, table):
     cursor = db.cursor()
