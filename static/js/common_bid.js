@@ -1,7 +1,16 @@
+function data_to_key(name, _type) {
+	if (_type === undefined) return name;
+	return '[' + _type + '] ' + name;
+}
+
 function nameToDataMap(data) {
 	var nameMap = {};
 	for (i = 0; i < data.length; i++) {
-		nameMap[data[i]['name']] = data[i];
+		if (data_to_key(data[i]['name'], data[i]['type']) in nameMap) {
+			console.log(data_to_key(data[i]['name'], data[i]['type']));
+		}
+		//nameMap[data[i]['name']] = data[i];
+		nameMap[data_to_key(data[i]['name'], data[i]['type'])] = data[i];
 	}
 	return nameMap;
 }
@@ -39,6 +48,7 @@ function fuzzyFind(query, field) {
 	// TODO: (P3) Make this actual fuzzy find.
 	var lowerQuery = angular.lowercase(query);
 	return function fuzzyFilter(item) {
-		return item[field].toLowerCase().includes(lowerQuery);
+		var target = field ? item[field] : item;
+		return target.toLowerCase().includes(lowerQuery);
 	}
 }

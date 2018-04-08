@@ -3,7 +3,7 @@
 var app = angular.module('bidintelStats', ['ngMaterial', 'ngMessages']);
 app.controller('bidStatsController', function($http) {
 	var self = this;
-	self.courseTypes = ["Elective", "Multisection", "Clinic", "International"];
+	self.courseTypes = ["Elective", "Multisection", "Clinic", "International", "Legal Profession"];
 	self.ELECTIVE = 0;
 	self.INTERNATIONAL = 3;
 	
@@ -20,6 +20,8 @@ app.controller('bidStatsController', function($http) {
 	self.CHART_NAME = 'bidChart';
 	
 	self.generateChartData = function() {
+		// TODO: (P3) When receiving 0-values across the board, hovering over
+		// 			  the chart again results in rendering the old results.
 		var data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 		for (var key in self.bidData){
 			var attrName = key;
@@ -120,6 +122,10 @@ app.controller('bidStatsController', function($http) {
 		return query ? validProfessors.filter(fuzzyFind(query, 'name')) : validProfessors;
 	}
 	
+	self.searchCourseTypes = function(query) {
+		return query ? self.courseTypes.filter(fuzzyFind(query)) : self.courseTypes;
+	}
+	
 	self.render = function() {
 		$http.post('/get_bid_stats', {
 				'course': self.course,
@@ -128,6 +134,7 @@ app.controller('bidStatsController', function($http) {
 				'endTerm': self.endTerm,
 				'startYear': self.startYear,
 				'endYear': self.endYear,
+				'courseType': self.courseTypes.indexOf(self.courseTypeText),
 		}).then(function(response) {
 			self.bidData = response.data;
 			self.createChart();

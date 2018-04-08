@@ -8,16 +8,18 @@ String.prototype.toProperCase = function () {
 var app = angular.module('bidintel', ['dndLists', 'ngMaterial', 'ngMessages']);
 app.controller('bidController', function($http) {
 	var self = this;
-	self.courseTypes = ["Elective", "Multisection", "Clinic", "International"];
+	self.courseTypes = ["Elective", "Multisection", "Clinic", "International", "Legal Profession"];
 	self.ELECTIVE = 0;
 	self.INTERNATIONAL = 3;
 	
 	self.terms = ["Fall", "Winter", "Spring", "Full Year"];
+	self.WINTER = 1;
 	self.SPRING = 2;
 	self.ALL_TERMS = 3; // Index of "Full Year"
 	self.shortTerm = ['FA', 'WI', 'SP'];
 	
 	self.year = 18;
+	self.hasResults = true;
 	
 	self.bids = [{}];
 	$http.get('/data/professors').then(function(data) {
@@ -52,7 +54,8 @@ app.controller('bidController', function($http) {
 		
 		// Put a warning here.
 		for (i = 0; i < self.bids.length; i++) {
-			if (self.courses[self.bids[i]['selectedCourse']]['type'] != self.courseType) {
+			if (self.bids[i]['selectedCourse'] == undefined ||
+				self.courses[self.bids[i]['selectedCourse']]['type'] != self.courseType) {
 				self.bids[i] = self.makeBid();
 			}
 		}
@@ -133,7 +136,7 @@ app.controller('bidController', function($http) {
 			yearTerm = termParts[termParts.length - 1].trim();
 			year = parseInt(yearTerm.substr(0, 4));
 			term = self.shortTerm.indexOf(yearTerm.substr(4, yearTerm.length));
-			if (term == self.SPRING) year--;
+			if (term == self.SPRING || term == self.WINTER) year--;
 			self.year = year - 2000;
 			
 			courseParts = self.lSplitOnce(parts[2], (':'));
@@ -156,7 +159,7 @@ app.controller('bidController', function($http) {
 			// Should use the priority instead just in case.
 			self.bids[i] = {'termName': self.terms[term],
 							'term': term,
-							'selectedCourse': self.courseNameMap[course],
+							'selectedCourse': self.courseNameMap[data_to_key(course, self.courseType)],
 							'selectedProfessor': pData,}
 			
 			//console.log("Found bid for '" + course + "' by " + professor + " for " + self.terms[term] + " " + year);

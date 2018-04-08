@@ -40,6 +40,23 @@
 			<input ng-model="ctrl.endYear" type="number" style="width: 75px"></input>
 		</div>
 		
+		<!-- TODO: (P4) When clicking x on courseType, actually reset it to undefined? -->
+		<md-autocomplete
+			  md-no-cache=true
+			  md-selected-item="ctrl.courseTypeText"
+			  md-search-text="ctrl.courseTypeSearchText"
+			  md-items="courseType in ctrl.searchCourseTypes(ctrl.courseTypeSearchText)"
+			  md-item-text="courseType"
+			  md-min-length="0"
+			  placeholder="Course Type"
+			  class="autocomplete">
+			<md-item-template>
+				<span>{{ '{{courseType}}' }}</span>
+			</md-item-template>
+			<md-not-found>
+				<span>No matching courses type found.</span>
+			</md-not-found>
+		</md-autocomplete>
 		<md-autocomplete
 			  md-no-cache=true
 			  md-selected-item="ctrl.course"

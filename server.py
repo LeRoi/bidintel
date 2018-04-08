@@ -28,12 +28,16 @@ for result in sql.fetch_table(database_src, sql.Tables.PROFESSORS):
                                  'name': result[1]})
 professors_reference_json = json.dumps({'professors': professors_reference})
 
-course_reference = []
+course_reference = {}
 for result in sql.fetch_table(database_src, sql.Tables.COURSES):
-    course_reference.append({'id': result[0],
-                             'type': result[1],
-                             'name': result[2]})
-course_reference_json = json.dumps({'courses': course_reference})
+    course_reference[result[0]] = {
+        'type': result[1],
+        'name': result[2]}
+course_reference_json = json.dumps({'courses':
+    [{'id': key,
+      'type': course_reference[key]['type'],
+      'name': course_reference[key]['name']} \
+     for key in course_reference]})
 
 def add_row(table, data):
     db = sql.sql_connect(database_src)
@@ -98,21 +102,31 @@ def get_bid_stats():
     ## TODO: (P1) Segment only by included items.
     form = json.loads(request.data)
     #print form
-    c_id = form['course']['id']
-    p_id = form['professor']['id']
+
     startDate = date_to_int(form['startTerm'], form['startYear'])
     endDate = date_to_int(form['endTerm'], form['endYear'])
-    full_id = -1
+
+    c_id = form['course']['id'] if form['course'] else None
+    p_id = form['professor']['id'] if form['professor'] else None
+    c_type = form['courseType'] # Could be -1 or a real value.
+    
+    full_ids = []
     for k in full_course_reference:
         v = full_course_reference[k]
-        if v['c_id'] == c_id and p_id in v['p_ids']:
-            full_id = k
+        valid_term = c_type == -1 or \
+                     course_reference[v['c_id']]['type'] == c_type
+        valid_course = not c_id or v['c_id'] == c_id
+        valid_professor = not p_id or p_id in v['p_ids']
+        if valid_term and valid_course and valid_professor:
+            full_ids.append(k)
 
     results = {}
     for result in sql.fetch_table(database_src, sql.Tables.BIDS):
         bidDate = date_to_int(result[2], result[3])
-        if result[1] == full_id and bidDate >= startDate and \
+        #print 'Comparing start: %d\tend: %d\tvalue: %d' % (startDate, endDate, bidDate)
+        if result[1] in full_ids and bidDate >= startDate and \
            bidDate <= endDate:
+            #print '\tbidDate is within range!'
             #print 'Start: %d\tEnd: %d\tActual: %d' % (startDate, endDate, bidDate)
             if result[4] not in results:
                 results[result[4]] = 0
@@ -131,7 +145,7 @@ def submit_bids():
     next_bid_id = sql.get_next_id(db, sql.Tables.BIDS)
     for i in range(len(bid_data)):
         bid = bid_data[i]
-        print bid
+        #print bid
         ## May need to add bid batch concept for retrieval
         ## Or just have different columns in user tables...
         course_id = bid['selectedCourse']['id']
@@ -144,7 +158,7 @@ def submit_bids():
         got_in = int(bid['gotIn'] if 'gotIn' in bid else False)
         sql.query(cursor, sql.SQL.INSERT.INSERT_BID %
                   (next_bid_id, full_id, bid['term'],
-                   form['year'] + (1 if bid['term'] == struct.Term.SPRING else 0),
+                   form['year'] + (0 if bid['term'] == struct.Term.FALL else 1),
                    i + 1, got_in, -1))
         next_bid_id += 1
     sql.query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' %
