@@ -151,13 +151,7 @@ def submit_bids():
           (next_bid_id, sql.Tables.BIDS))
     db.commit()
     db.close()
-    return json.dumps({'status':'OK'})
-
-## This is probably no longer needed.
-@app.route('/submit_bid_text', methods=['POST'])
-def submit_bid_text():
-    print 'Received data for bid text: %s' % str(request.data)
-    print 'Understood as %s' % str(struct.email_to_bid_data(to_ascii_simple(request.data)))
+    return json.dumps({'status':'OK'})t.email_to_bid_data(to_ascii_simple(request.data)))
     return json.dumps({'status':'OK'})
 
 ## The database should always already exist.

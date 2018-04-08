@@ -11,6 +11,7 @@ class CourseType(IntEnum):
     MULTISECTION = 1
     CLINIC = 2
     INTERNATIONAL = 3
+    LEGAL_PROFESSION = 4
 
 class NextId(IntEnum):
     PROFESSOR = 0
