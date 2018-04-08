@@ -145,6 +145,7 @@ app.controller('bidController', function($http) {
 			firstLast = professor.split(",");
 			professor = firstLast[1].trim() + " " + firstLast[0];
 			firstMiddleLast = professor.split(' ');
+			// TODO: (P2) Remove this hack for Sullivan.
 			professorFL = firstMiddleLast.length <= 3 ?
 				firstMiddleLast[0] + " " + firstMiddleLast[2] :
 				firstMiddleLast[0] + " " + firstMiddleLast[1] + " " + firstMiddleLast[3] +
@@ -163,6 +164,7 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.submit = function() {
+		// TODO: (P2) Remove the 2000 year hack.
 		$http.post('/submit_bids', {'bids': self.bids, 'year': 2000 + self.year})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');

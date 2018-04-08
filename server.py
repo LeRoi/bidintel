@@ -16,6 +16,24 @@ for result in sql.fetch_table(database_src, sql.Tables.FULL_COURSES):
     full_course_reference[result[0]] = {
         'c_id': result[1],
         'p_ids': csv_to_ids(result[2])}
+full_course_reference_json = json.dumps({'fullcourses':
+    [{'id': key,
+      'cid': full_course_reference[key]['c_id'],
+      'pids': full_course_reference[key]['p_ids']} \
+     for key in full_course_reference]})
+
+professors_reference = []
+for result in sql.fetch_table(database_src, sql.Tables.PROFESSORS):
+    professors_reference.append({'id': result[0],
+                                 'name': result[1]})
+professors_reference_json = json.dumps({'professors': professors_reference})
+
+course_reference = []
+for result in sql.fetch_table(database_src, sql.Tables.COURSES):
+    course_reference.append({'id': result[0],
+                             'type': result[1],
+                             'name': result[2]})
+course_reference_json = json.dumps({'courses': course_reference})
 
 def add_row(table, data):
     db = sql.sql_connect(database_src)
@@ -46,29 +64,15 @@ def home():
 ## Should pre-process some of this.
 @app.route('/data/professors')
 def professors():
-    professors = []
-    for result in sql.fetch_table(database_src, sql.Tables.PROFESSORS):
-        professors.append({'id': result[0],
-                           'name': result[1]})
-    return json.dumps({'professors': professors})
+    return professors_reference_json
 
 @app.route('/data/courses')
 def courses():
-    courses = []
-    for result in sql.fetch_table(database_src, sql.Tables.COURSES):
-        courses.append({'id': result[0],
-                        'type': result[1],
-                        'name': result[2]})
-    return json.dumps({'courses': courses})
+    return course_reference_json
 
 @app.route('/data/fullcourses')
 def fullcourses():
-    fullcourses = []
-    for result in sql.fetch_table(database_src, sql.Tables.FULL_COURSES):
-        fullcourses.append({'id': result[0],
-                        'cid': result[1],
-                        'pids': csv_to_ids(result[2])})
-    return json.dumps({'fullcourses': fullcourses})
+    return full_course_reference_json
 
 @app.route('/bid')
 def bid():
@@ -91,6 +95,7 @@ def submit_rows():
 
 @app.route('/get_bid_stats', methods=['GET', 'POST'])
 def get_bid_stats():
+    ## TODO: (P1) Segment only by included items.
     form = json.loads(request.data)
     #print form
     c_id = form['course']['id']
