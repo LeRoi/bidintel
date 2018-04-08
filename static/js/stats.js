@@ -17,57 +17,38 @@ app.controller('bidStatsController', function($http) {
 	self.startTerm = self.FALL;
 	self.endTerm = self.SPRING;
 	
-	self.CHART_NAME = 'bidChart';
+	self.COUNT_CHART = 'bidChart';
+	self.SUCCESS_CHART = 'successChart';
 	
-	self.generateChartData = function() {
+	self.generateChartData = function(targetMap) {
 		// TODO: (P3) When receiving 0-values across the board, hovering over
 		// 			  the chart again results in rendering the old results.
 		var data = [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
-		for (var key in self.bidData){
+		for (var key in targetMap){
 			var attrName = key;
-			var attrValue = self.bidData[key];
+			var attrValue = targetMap[key];
 			data[attrName - 1] = attrValue;
 		}
 		return data
 	}
 	
-	self.createChart = function() {
-		self.ctx = document.getElementById(self.CHART_NAME).getContext('2d');
+	self.createChart = function(name, counts, successes) {
+		self.ctx = document.getElementById(name).getContext('2d');
 		self.myChart = new Chart(self.ctx, {
 			type: 'bar',
 			data: {
 				labels: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12],
 				datasets: [{
 					label: '# of Bids',
-					data: self.generateChartData(),
-					backgroundColor: [
-						'rgba(255, 99, 132, 0.2)',
-						'rgba(54, 162, 235, 0.2)',
-						'rgba(255, 206, 86, 0.2)',
-						'rgba(75, 192, 192, 0.2)',
-						'rgba(153, 102, 255, 0.2)',
-						'rgba(255, 159, 64, 0.2)',
-						'rgba(255, 99, 132, 0.2)',
-						'rgba(54, 162, 235, 0.2)',
-						'rgba(255, 206, 86, 0.2)',
-						'rgba(75, 192, 192, 0.2)',
-						'rgba(153, 102, 255, 0.2)',
-						'rgba(255, 159, 64, 0.2)',
-					],
-					borderColor: [
-						'rgba(255,99,132,1)',
-						'rgba(54, 162, 235, 1)',
-						'rgba(255, 206, 86, 1)',
-						'rgba(75, 192, 192, 1)',
-						'rgba(153, 102, 255, 1)',
-						'rgba(255, 159, 64, 1)',
-						'rgba(255,99,132,1)',
-						'rgba(54, 162, 235, 1)',
-						'rgba(255, 206, 86, 1)',
-						'rgba(75, 192, 192, 1)',
-						'rgba(153, 102, 255, 1)',
-						'rgba(255, 159, 64, 1)',
-					],
+					data: self.generateChartData(counts),
+					backgroundColor: 'rgba(54, 162, 235, 0.2)',
+					borderColor: 'rgba(54, 162, 235, 1)',
+					borderWidth: 1
+				},{
+					label: '# of Successes',
+					data: self.generateChartData(successes),
+					backgroundColor: 'rgba(255, 206, 86, 0.2)',
+					borderColor: 'rgba(255, 206, 86, 1)',
 					borderWidth: 1
 				}]
 			},
@@ -136,8 +117,8 @@ app.controller('bidStatsController', function($http) {
 				'endYear': self.endYear,
 				'courseType': self.courseTypes.indexOf(self.courseTypeText),
 		}).then(function(response) {
-			self.bidData = response.data;
-			self.createChart();
+			self.bidData = response.data; // May not need to store this.
+			self.createChart(self.COUNT_CHART, self.bidData['bidCounts'], self.bidData['bidSuccesses']);
 		});
 	}
 });

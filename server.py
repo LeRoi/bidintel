@@ -120,17 +120,21 @@ def get_bid_stats():
         if valid_term and valid_course and valid_professor:
             full_ids.append(k)
 
-    results = {}
+    results = {'bidCounts':{}, 'bidSuccesses':{}}
     for result in sql.fetch_table(database_src, sql.Tables.BIDS):
         bidDate = date_to_int(result[2], result[3])
         #print 'Comparing start: %d\tend: %d\tvalue: %d' % (startDate, endDate, bidDate)
         if result[1] in full_ids and bidDate >= startDate and \
            bidDate <= endDate:
+            if result[5]:
+                if result[4] not in results['bidSuccesses']:
+                    results['bidSuccesses'][result[4]] = 0
+                results['bidSuccesses'][result[4]] += 1
             #print '\tbidDate is within range!'
             #print 'Start: %d\tEnd: %d\tActual: %d' % (startDate, endDate, bidDate)
-            if result[4] not in results:
-                results[result[4]] = 0
-            results[result[4]] += 1
+            if result[4] not in results['bidCounts']:
+                results['bidCounts'][result[4]] = 0
+            results['bidCounts'][result[4]] += 1
     #print results
     return json.dumps(results)
 

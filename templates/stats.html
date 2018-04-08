@@ -92,8 +92,10 @@
 		<md-button class="md-raised md-primary" ng-click="ctrl.render()">Render</md-button>
 	</div>
 
-	<div class="chart">
-		<canvas id="{{'{{ctrl.CHART_NAME}}'}}" width="400" height="400"></canvas>
+	<div style="display: flex">
+		<div class="chart">
+			<canvas id="{{'{{ctrl.COUNT_CHART}}'}}" width="400" height="400"></canvas>
+		</div>
 	</div>
 </div>
 {% endblock %}
