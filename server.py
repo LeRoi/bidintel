@@ -151,7 +151,6 @@ def submit_bids():
           (next_bid_id, sql.Tables.BIDS))
     db.commit()
     db.close()
-    return json.dumps({'status':'OK'})t.email_to_bid_data(to_ascii_simple(request.data)))
     return json.dumps({'status':'OK'})
 
 ## The database should always already exist.

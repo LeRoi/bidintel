@@ -48,6 +48,18 @@ class FullCourse():
         self.c_id = c_id
         self.p_ids = p_ids
 
+    def __hash__(self):
+        ## This assumes there is only one p_id associated, maybe two.
+        ## This also assumes there are not more than ~8000 courses.
+        r = self.c_id
+        for i in range(len(self.p_ids)):
+            r += self.p_ids[i] * (1000 ** (i + 1))
+        return r
+
+    def __eq__(self, other):
+        return other and other.c_id == self.c_id and \
+               other.p_ids == self.p_ids
+
 class CTerm():
     def __init__(self, year, term):
         self.year = year ## int
