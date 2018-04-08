@@ -33,6 +33,7 @@ app.controller('bidStatsController', function($http) {
 	}
 	
 	self.createChart = function(name, counts, successes) {
+		if (self.myChart !== undefined) self.myChart.destroy();
 		self.ctx = document.getElementById(name).getContext('2d');
 		self.myChart = new Chart(self.ctx, {
 			type: 'bar',
