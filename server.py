@@ -89,6 +89,32 @@ def submit_rows():
     add_row(table, format_data(table, form, next_id))
     return json.dumps({'status':'OK'})
 
+@app.route('/get_bid_stats', methods=['GET', 'POST'])
+def get_bid_stats():
+    form = json.loads(request.data)
+    #print form
+    c_id = form['course']['id']
+    p_id = form['professor']['id']
+    startDate = date_to_int(form['startTerm'], form['startYear'])
+    endDate = date_to_int(form['endTerm'], form['endYear'])
+    full_id = -1
+    for k in full_course_reference:
+        v = full_course_reference[k]
+        if v['c_id'] == c_id and p_id in v['p_ids']:
+            full_id = k
+
+    results = {}
+    for result in sql.fetch_table(database_src, sql.Tables.BIDS):
+        bidDate = date_to_int(result[2], result[3])
+        if result[1] == full_id and bidDate >= startDate and \
+           bidDate <= endDate:
+            #print 'Start: %d\tEnd: %d\tActual: %d' % (startDate, endDate, bidDate)
+            if result[4] not in results:
+                results[result[4]] = 0
+            results[result[4]] += 1
+    #print results
+    return json.dumps(results)
+
 @app.route('/submit_bids', methods=['POST'])
 def submit_bids():
     #print 'Received data: %s' % str(request.data)

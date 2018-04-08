@@ -1,6 +1,5 @@
+// Include common_bid.js before this.
 // TODO: (P3) validate against duplicate classes (cID, pID, term)
-// TODO: (P0) email entry form
-// TODO: (P0) make submit actually work
 
 String.prototype.toProperCase = function () {
     return this.replace(/\w\S*/g, function(txt){return txt.charAt(0).toUpperCase() + txt.substr(1).toLowerCase();});
@@ -28,7 +27,7 @@ app.controller('bidController', function($http) {
 			if (l['name'] > r['name']) return 1;
 			return 0;
 		});;
-		self.professorNameMap = self.nameToDataMap(self.professors);
+		self.professorNameMap = nameToDataMap(self.professors);
 	});
 	$http.get('/data/courses').then(function(data) {
 		self.courses = data.data['courses'].sort((l, r) => {
@@ -36,40 +35,11 @@ app.controller('bidController', function($http) {
 			if (l['name'] > r['name']) return 1;
 			return 0;
 		});
-		self.courseNameMap = self.nameToDataMap(self.courses);
+		self.courseNameMap = nameToDataMap(self.courses);
 	});
 	$http.get('/data/fullcourses').then(function(data) {
-		self.fullCourses = self.fullCoursesToMap(data.data['fullcourses']);
+		self.fullCourses = fullCoursesToMap(data.data['fullcourses']);
 	});
-	
-	self.nameToDataMap = function(data) {
-		var nameMap = {};
-		for (i = 0; i < data.length; i++) {
-			nameMap[data[i]['name']] = data[i];
-		}
-		return nameMap;
-	}
-	
-	self.fullCoursesToMap = function(fullCourseData) {
-		var courseMap = {'courseToProfessor':{}, 'professorToCourse':{}};
-		for (i = 0; i < fullCourseData.length; i++) {
-			var result = fullCourseData[i];
-			if (!(result['cid'] in courseMap['courseToProfessor'])) {
-				courseMap['courseToProfessor'][result['cid']] = [];
-			}
-			courseMap['courseToProfessor'][result['cid']].push(parseInt(result['pids']));
-			for (j = 0; j < result['pids'].length; j++) {
-				// TODO: (P3) Treat joint professors correctly and group them together.
-				// Joint professors currently not supported by the backend; low priority.
-				var professorId = result['pids'][j];
-				if (!(professorId in courseMap['professorToCourse'])) {
-					courseMap['professorToCourse'][professorId] = [];
-				}
-				courseMap['professorToCourse'][professorId].push(result['cid']);
-			}
-		}
-		return courseMap;
-	}
 	
 	self.updateCourseType = function() {
 		if (self.courseType == self.oldCourseType) return;
@@ -100,35 +70,17 @@ app.controller('bidController', function($http) {
 	
 	self.searchCourses = function(query, index) {
 		var validCourses = self.courses.filter(
-			self.teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
+			teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
 		/*validCourses = validCourses.filter(self.isInTerm(self.term));
 		validCourses = validCourses.filter(self.isInTerm(self.bids[index]['term']));*/
 		validCourses = validCourses.filter(self.isInType);
-		return query ? validCourses.filter(self.fuzzyFind(query, 'name')) : validCourses;
+		return query ? validCourses.filter(fuzzyFind(query, 'name')) : validCourses;
 	}
 	
 	self.searchProfessors = function(query, index) {
 		var validProfessors = self.professors.filter(
-			self.teaches(self.bids[index]['selectedCourse'], self.fullCourses['courseToProfessor']));
-		return query ? validProfessors
-			.filter(self.fuzzyFind(query, 'name')) : validProfessors;
-	}
-	
-	self.fuzzyFind = function(query, field) {
-		// TODO: (P3) Make this actual fuzzy find.
-		var lowerQuery = angular.lowercase(query);
-		return function fuzzyFilter(item) {
-			return item[field].toLowerCase().includes(lowerQuery);
-		}
-	}
-	
-	// courseData is a professor or a course.
-	self.teaches = function(courseData, courseMap) {
-		return function teachFilter(item) {
-			if (!courseData) return true;
-			if (!(courseData['id'] in courseMap)) return false;
-			return courseMap[courseData['id']].includes(item['id']);
-		}
+			teaches(self.bids[index]['selectedCourse'], self.fullCourses['courseToProfessor']));
+		return query ? validProfessors.filter(fuzzyFind(query, 'name')) : validProfessors;
 	}
 	
 	// Don't actually know when courses are offered...can't validate.
