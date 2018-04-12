@@ -11,130 +11,138 @@
 {% endblock %}
 
 {% block body %}
-<div class="padding" ng-app="bidintel" ng-controller="bidController as ctrl">
-	<div class="dropdowns">
-		<md-input-container style="padding-right: 24px">
-			<label>Course Type</label>
-			<md-select ng-model="ctrl.courseType"
-				class="md-no-underline"
-				md-on-open="ctrl.oldCourseType = ctrl.courseType"
-				md-on-close="ctrl.updateCourseType()">
-				<md-option ng-repeat="course in ctrl.courseTypes" ng-value=ctrl.courseTypes.indexOf(course)>
-					{{'{{course}}'}}
-				</md-option>
-			</md-select>
-		</md-input-container>
-		<md-input-container style="padding-right: 24px">
-			<label>Term</label>
-			<md-select ng-model="ctrl.term"
-				class="md-no-underline"
-				md-on-open="ctrl.oldTerm = ctrl.term"
-				md-on-close="ctrl.updateTerm()"
-				ng-disabled="ctrl.courseType !== undefined && ctrl.courseType != ctrl.ELECTIVE">
-				<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
-					{{'{{term}}'}}
-				</md-option>
-			</md-select>
-		</md-input-container>
-		<div style="padding-right: 16px;">
-			20<input ng-model="ctrl.year" type="number" style="width: 50px"></input>-{{'{{ctrl.year+1}}'}}
+<div ng-app="bidintel" ng-controller="bidController as ctrl">
+	{% include "header.html" %}
+	<div class="bid-body">
+		<div class="dropdowns">
+			<md-input-container style="padding-right: 24px">
+				<label>Course Type</label>
+				<md-select ng-model="ctrl.courseType"
+					class="md-no-underline"
+					md-on-open="ctrl.oldCourseType = ctrl.courseType"
+					md-on-close="ctrl.updateCourseType()">
+					<md-option ng-repeat="course in ctrl.courseTypes" ng-value=ctrl.courseTypes.indexOf(course)>
+						{{'{{course}}'}}
+					</md-option>
+				</md-select>
+			</md-input-container>
+			<md-input-container style="padding-right: 24px">
+				<label>Term</label>
+				<md-select ng-model="ctrl.term"
+					class="md-no-underline"
+					md-on-open="ctrl.oldTerm = ctrl.term"
+					md-on-close="ctrl.updateTerm()"
+					ng-disabled="ctrl.courseType !== undefined && ctrl.courseType != ctrl.ELECTIVE">
+					<md-option ng-repeat="term in ctrl.terms" ng-value=ctrl.terms.indexOf(term)>
+						{{'{{term}}'}}
+					</md-option>
+				</md-select>
+			</md-input-container>
+			<div style="padding-right: 16px;">
+				20<input ng-model="ctrl.year" type="number" style="width: 50px"></input>-{{'{{ctrl.year+1}}'}}
+			</div>
+			<md-checkbox ng-model="ctrl.hasResults">Results are out</md-checkbox>
 		</div>
-		<md-checkbox ng-model="ctrl.hasResults">Results are out</md-checkbox>
-	</div>
-	<div class="buttons">
-		<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
-		<md-button class="md-raised md-primary"
-			ng-click="ctrl.showTextEntry = true"
-			onclick="document.getElementById('light').style.display='block';document.getElementById('fade').style.display='block'">
-			Email Entry (Fast!!)
-		</md-button>
-		<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
-	</div>
-	<div id="light"
-		class="white_content">
-		<div class="popup">
-			{% include "popup_bid_text_entry.html" %}
+		<div class="buttons">
+			<md-button class="md-raised md-primary" ng-click="ctrl.addBid()">Add Bid</md-button>
+			<md-button class="md-raised md-primary"
+				ng-click="ctrl.showTextEntry = true"
+				onclick="document.getElementById('light').style.display='block';document.getElementById('fade').style.display='block'">
+				Email Entry (Fast!!)
+			</md-button>
+			<md-button class="md-raised md-primary" ng-click="ctrl.submit()">Submit</md-button>
 		</div>
+		<div id="light"
+			class="white_content">
+			<div class="popup">
+				{% include "popup_bid_text_entry.html" %}
+			</div>
+		</div>
+		<div id="fade"
+			class="black_overlay"
+			onclick="document.getElementById('light').style.display='none';document.getElementById('fade').style.display='none'">
+		</div>
+		
+		<md-list dnd-list="ctrl.bids" id="bidlist" flex>
+			<md-list-item
+				class="md-3-line"
+				ng-repeat="bid in ctrl.bids"
+				dnd-draggable="bid"
+				dnd-moved="ctrl.bids.splice($index, 1)"
+				dnd-effect-allowed="move"
+				dnd-selected="models.selected = bid"
+				ng-class="{'selected': models.selected === bid}"
+				style="display: flex; border-bottom: 0.5px solid; margin-bottom: 4px; align-items: center;">
+					<md-icon md-svg-icon="static/svg/ic_apps_black_24px.svg"
+						style="margin-left: 0; margin-right: 8px; cursor: pointer">
+					</md-icon>
+					<div style="padding-right: 12px; padding-top: 4px;">{{'{{$index + 1}}'}}.</div>
+					<md-autocomplete
+						  md-no-cache=true
+						  md-selected-item="bid['selectedCourse']"
+						  md-search-text="bid['courseSearchText']"
+						  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
+						  md-item-text="course['name']"
+						  md-min-length="0"
+						  placeholder="Course"
+						  class="autocomplete">
+						<md-item-template>
+							<span>{{ '{{course["name"]}}' }}</span>
+						</md-item-template>
+						<md-not-found>
+							<span>No matching courses found.</span>
+						</md-not-found>
+					</md-autocomplete>
+					<md-autocomplete
+						  md-no-cache=true
+						  md-selected-item="bid['selectedProfessor']"
+						  md-search-text="bid['professorSearchText']"
+						  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
+						  md-item-text="professor['name']"
+						  md-min-length="0"
+						  placeholder="Professor"
+						  class="autocomplete md-no-underline">
+						<md-item-template>
+							<span>{{ '{{professor["name"]}}' }}</span>
+						</md-item-template>
+						<md-not-found>
+							<span>No matching professors found.</span>
+						</md-not-found>
+					</md-autocomplete>
+					<md-autocomplete
+						  md-no-cache=true
+						  md-selected-item="bid['termName']"
+						  md-selected-item-change="ctrl.updateBidTerm($index)"
+						  md-items="term in ctrl.terms.slice(0, ctrl.ALL_TERMS)"
+						  md-item-text="term"
+						  md-min-length="0"
+						  placeholder="Term"
+						  class="autocomplete md-no-underline"
+						  ng-disabled="ctrl.term !== undefined && ctrl.term != ctrl.ALL_TERMS">
+						<md-item-template>
+							<span>{{ '{{term}}' }}</span>
+						</md-item-template>
+					</md-autocomplete>
+					<div ng-repeat="i in [0]">
+						<md-checkbox ng-model="bid['gotIn']"
+							ng-disabled="ctrl.hasResults === undefined || !ctrl.hasResults">
+							Got in?
+						</md-checkbox>
+						<md-checkbox ng-model="bid['gotOffWaitlist']"
+							ng-disabled="ctrl.hasResults === undefined || !ctrl.hasResults || bid['gotIn']">
+							Got off waitlist?
+						</md-checkbox>
+					</div>
+					<md-button class="md-icon-button remove-button"
+						ng-click="ctrl.removeBid($index)"
+						aria-label="Remove bid">
+						<md-icon md-svg-icon="static/svg/ic_close_black_24px.svg"></md-icon>
+					</md-button>
+			</md-list-item>
+		</md-list>
+		* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.<br>
+		* Professor Sullivan's TAW will require you to manually enter him as the course's professor when using email entry.<br>
+		* Can't find a course or professor? Feel free to submit an empty bid in its spot.
 	</div>
-	<div id="fade"
-		class="black_overlay"
-		onclick="document.getElementById('light').style.display='none';document.getElementById('fade').style.display='none'">
-	</div>
-	
-	<md-list dnd-list="ctrl.bids" id="bidlist" flex>
-		<md-list-item
-			class="md-3-line"
-			ng-repeat="bid in ctrl.bids"
-			dnd-draggable="bid"
-			dnd-moved="ctrl.bids.splice($index, 1)"
-			dnd-effect-allowed="move"
-			dnd-selected="models.selected = bid"
-			ng-class="{'selected': models.selected === bid}"
-			style="display: flex; border-bottom: 0.5px solid; margin-bottom: 4px; align-items: center;">
-				<md-icon md-svg-icon="static/svg/ic_apps_black_24px.svg"
-					style="margin-left: 0; margin-right: 8px; cursor: pointer">
-				</md-icon>
-				<div style="padding-right: 12px; padding-top: 4px;">{{'{{$index + 1}}'}}.</div>
-				<md-autocomplete
-					  md-no-cache=true
-					  md-selected-item="bid['selectedCourse']"
-					  md-search-text="bid['courseSearchText']"
-					  md-items="course in ctrl.searchCourses(bid['courseSearchText'], $index)"
-					  md-item-text="course['name']"
-					  md-min-length="0"
-					  placeholder="Course"
-					  class="autocomplete">
-					<md-item-template>
-						<span>{{ '{{course["name"]}}' }}</span>
-					</md-item-template>
-					<md-not-found>
-						<span>No matching courses found.</span>
-					</md-not-found>
-				</md-autocomplete>
-				<md-autocomplete
-					  md-no-cache=true
-					  md-selected-item="bid['selectedProfessor']"
-					  md-search-text="bid['professorSearchText']"
-					  md-items="professor in ctrl.searchProfessors(bid['professorSearchText'], $index)"
-					  md-item-text="professor['name']"
-					  md-min-length="0"
-					  placeholder="Professor"
-					  class="autocomplete md-no-underline">
-					<md-item-template>
-						<span>{{ '{{professor["name"]}}' }}</span>
-					</md-item-template>
-					<md-not-found>
-						<span>No matching professors found.</span>
-					</md-not-found>
-				</md-autocomplete>
-				<md-autocomplete
-					  md-no-cache=true
-					  md-selected-item="bid['termName']"
-					  md-selected-item-change="ctrl.updateBidTerm($index)"
-					  md-items="term in ctrl.terms.slice(0, ctrl.ALL_TERMS)"
-					  md-item-text="term"
-					  md-min-length="0"
-					  placeholder="Term"
-					  class="autocomplete md-no-underline"
-					  ng-disabled="ctrl.term !== undefined && ctrl.term != ctrl.ALL_TERMS">
-					<md-item-template>
-						<span>{{ '{{term}}' }}</span>
-					</md-item-template>
-				</md-autocomplete>
-				<div ng-repeat="i in [0]">
-					<md-checkbox ng-model="bid['gotIn']"
-						ng-disabled="ctrl.hasResults === undefined || !ctrl.hasResults">
-						Got in?
-					</md-checkbox>
-				</div>
-				<md-button class="md-icon-button remove-button"
-					ng-click="ctrl.removeBid($index)"
-					aria-label="Remove bid">
-					<md-icon md-svg-icon="static/svg/ic_close_black_24px.svg"></md-icon>
-				</md-button>
-		</md-list-item>
-	</md-list>
-	* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.<br>
-	* Professor Sullivan's TAW will require you to manually enter him as the course's professor when using email entry.
 </div>
 {% endblock %}

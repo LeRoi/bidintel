@@ -4,6 +4,22 @@
 	display: table;
 }
 
+.header {
+	//display: table;
+	//justify-content: flex-start;
+
+	//width: 1500px;
+
+	.right-align {
+		margin-left: auto;
+	}
+}
+
+.right-align-break {
+	//flex: 1 1 auto;
+	margin-left: auto;
+}
+
 .padded {
 	margin-left: 12px;
 	margin-top: 12px;
