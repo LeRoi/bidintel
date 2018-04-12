@@ -9,8 +9,25 @@
 	margin-bottom: 24px;
 }
 
-.bid-body {
-	padding-left: 12px;
+.bid-radio {
+	display: flex;
+	flex-flow: row wrap;
+	justify-content: center;
+}
+
+.bid-radio-buttons {
+	display: flex;
+}
+
+md-button:not([disabled]) .email-button {
+	background-color: green;
+}
+
+div .break {
+	flex-basis: 100%;
+	width: 0%;
+	height: 0%;
+	overflow: hidden;
 }
 
 .buttons {

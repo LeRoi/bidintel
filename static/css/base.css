@@ -4,19 +4,11 @@
 	display: table;
 }
 
-.header {
-	//display: table;
-	//justify-content: flex-start;
-
-	//width: 1500px;
-
-	.right-align {
-		margin-left: auto;
-	}
+.content-body {
+	padding-left: 12px;
 }
 
 .right-align-break {
-	//flex: 1 1 auto;
 	margin-left: auto;
 }
 
