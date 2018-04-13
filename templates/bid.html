@@ -133,17 +133,19 @@
 							<span>{{ '{{term}}' }}</span>
 						</md-item-template>
 					</md-autocomplete>
-					<div class="bid-radio">
-						<div style="padding-bottom: 8px;">
-							Did you get in?
-						</div>
-						<div class="break"></div>
-						<md-radio-group ng-model="ctrl.gotIn" class="bid-radio-buttons">
-							<md-radio-button value=1 style="padding-right: 12px;">I got in!</md-radio-button>
-							<md-radio-button value=2 style="padding-right: 12px;">I got off the waitlist</md-radio-button>
-							<md-radio-button value=0>Neither</md-radio-button>
-						</md-radio-group>
-					</div>
+					<md-autocomplete
+						  md-no-cache=true
+						  md-selected-item="bid['gotInText']"
+						  md-selected-item-change="ctrl.updateGotInOption($index)"
+						  md-items="option in ctrl.gotInOptions"
+						  md-item-text="option"
+						  md-min-length="0"
+						  placeholder="Did you get in?"
+						  class="autocomplete md-no-underline">
+						<md-item-template>
+							<span>{{ '{{option}}' }}</span>
+						</md-item-template>
+					</md-autocomplete>
 					<md-button class="md-icon-button remove-button"
 						ng-click="ctrl.removeBid($index)"
 						aria-label="Remove bid">
@@ -158,6 +160,7 @@
 				Submit
 			</md-button>
 		</div>
+		* If you got off a waitlist, mark it as such regardless of if you accepted or not.<br>
 		* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.<br>
 		* Can't find a course or professor? Submit an empty bid in its spot, and let me know!
 	</div>

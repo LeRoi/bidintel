@@ -18,6 +18,8 @@ app.controller('bidController', function($http) {
 	self.ALL_TERMS = 3; // Index of "Full Year"
 	self.shortTerm = ['FA', 'WI', 'SP'];
 	
+	self.gotInOptions = ["Yes, from bids", "Yes, off waitlist", "No"];
+	
 	self.hasResults = true;
 
 	// REMOVE THESE
@@ -75,6 +77,10 @@ app.controller('bidController', function($http) {
 		}
 	}
 	
+	self.updateGotInOption = function(index) {
+		self.bids[index]['gotIn'] = self.gotInOptions.indexOf(self.bids[index]['gotInText']);
+	}
+	
 	self.searchCourses = function(query, index) {
 		var validCourses = self.courses.filter(
 			teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
@@ -111,12 +117,22 @@ app.controller('bidController', function($http) {
 		return self.courseType === undefined || self.term === undefined ||
 			self.year === undefined || self.year < 0;
 	}
+	
+	self.isBidValid = function(bid) {
+		// Should also make sure course, professor are valid.
+		// Might fail for course, professor, term id == 0
+		return bid['selectedCourse'] !== undefined &&
+			bid['selectedProfessor'] !== undefined &&
+			bid['term'] !== undefined &&
+			bid['gotIn'] !== undefined;
+	}
 
 	self.canSubmit = function() {
-		// TODO: (P1) this.
-		// Check top-level items
-		// Ensure each bid is valid.
-		return false;
+		if (self.bidsDisabled()) return false;
+		for (i = 0; i < self.bids.length; i++) {
+			if (!self.isBidValid(self.bids[i])) return false;
+		}
+		return true;
 	}
 	
 	self.addBid = function() {
@@ -182,7 +198,6 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.submit = function() {
-		// TODO: (P2) Remove the 2000 year hack.
 		$http.post('/submit_bids', {'bids': self.bids, 'year': self.year})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');

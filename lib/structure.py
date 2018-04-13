@@ -20,6 +20,11 @@ class NextId(IntEnum):
     USER = 3
     BID = 4
 
+class GotIn(IntEnum):
+    NO = 0
+    FROM_BIDS = 1
+    OFF_WAITLIST = 2
+
 class User():
     def __init__(self, u_id, bids=[]):
         self.id = u_id

@@ -140,7 +140,7 @@ def get_bid_stats():
 
 @app.route('/submit_bids', methods=['POST'])
 def submit_bids():
-    #print 'Received data: %s' % str(request.data)
+    print 'Received data: %s' % str(request.data)
     form = json.loads(request.data)
     bid_data = form['bids']
     user_id = 3

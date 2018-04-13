@@ -44,7 +44,7 @@ class SQL:
             term INTEGER,
             year INTEGER,
             rank INTEGER,
-            gotIn BIT,
+            gotIn INTEGER,
             waitlist INTEGER);'''
 
         CREATE_NEXT_IDS_TABLE = '''
