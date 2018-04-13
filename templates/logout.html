@@ -1,0 +1,14 @@
+{% extends "base.html" %}
+{% block head %}
+	<script src="/static/js/logout.js"></script>
+{% endblock %}
+
+{% block body %}
+
+<div ng-app="bidintelLogout" ng-controller="bidLogOutController as ctrl">
+	{% include "header.html" %}
+	<script>
+		window.location.href = "/";
+	</script>
+</div>
+{% endblock %}

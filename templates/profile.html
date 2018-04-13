@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block head %}
+	<script src="/static/js/profile.js"></script>
+	<link rel="stylesheet" href="/static/css/profile.css">
+{% endblock %}
+
+{% block body %}
+
+<div ng-app="bidintelProfile" ng-controller="bidProfileController as ctrl">
+	{% include "header.html" %}
+	<div class="content-body">
+		Profile page
+	</div>
+</div>
+{% endblock %}

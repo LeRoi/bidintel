@@ -86,6 +86,14 @@ def bid():
 def stats():
     return Response(render_template('stats.html'))
 
+@app.route('/profile')
+def profile():
+    return Response(render_template('profile.html'))
+
+@app.route('/logout')
+def logout():
+    return Response(render_template('logout.html'))
+
 @app.route('/submit_rows', methods=['POST'])
 def submit_rows():
     form = json.loads(request.data)

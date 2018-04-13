@@ -6,10 +6,25 @@
 		<md-nav-item md-nav-href="/stats" name="Stats" value="stats">
 			View Stats
 		</md-nav-item>
-		<md-nav-item md-nav-href="/profile" name="Profile" value="profile" class="right-align-break">
+		<!-- TODO: (P0) Make login work -->
+		<md-nav-item md-nav-href="/login"
+			name="Log In"
+			value="login"
+			class="right-align-break"
+			ng-show="!true">
+			Log In
+		</md-nav-item>
+		<md-nav-item md-nav-href="/profile"
+			name="Profile"
+			value="profile"
+			class="right-align-break"
+			ng-show="true">
 			Profile
 		</md-nav-item>
-		<md-nav-item md-nav-href="/logout" name="Log Out" value="logout">
+		<md-nav-item md-nav-href="/logout"
+			name="Log Out"
+			value="logout"
+			ng-show="true">
 			Log Out
 		</md-nav-item>
 	</md-nav-item>

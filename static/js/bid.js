@@ -26,6 +26,7 @@ app.controller('bidController', function($http) {
 	self.year = 2018;
 	self.courseType = 1;
 	self.term = 3;
+	// TODO: (P0) REMOVE THESE
 	
 	self.bids = [{}];
 	$http.get('/data/professors').then(function(data) {
