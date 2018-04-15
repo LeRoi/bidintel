@@ -1,10 +1,14 @@
 {% extends "base.html" %}
+{% block head %}
+	<script src="/static/js/home.js"></script>
+{% endblock %}
+
 {% block body %}
 
-<div class="padded">
-	<ul>
-		<li><a href="/bid">Bid</a></li>
-		<li><a href="/update">Update</a></li>
+<div ng-app="bidintelHome" ng-controller="bidHomeController as ctrl">
+	{% include "header.html" %}
+	<div class="content-body">
+		Hello world!
+	</div>
 </div>
-
 {% endblock %}

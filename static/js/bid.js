@@ -18,8 +18,17 @@ app.controller('bidController', function($http) {
 	self.ALL_TERMS = 3; // Index of "Full Year"
 	self.shortTerm = ['FA', 'WI', 'SP'];
 	
-	self.year = 18;
+	self.years = ["1L", "2L", "3L"];
+	
+	self.gotInOptions = ["Yes, from bids", "Yes, off waitlist", "No", "I don't remember"];
+	
 	self.hasResults = true;
+
+	// REMOVE THESE
+	// self.year = 2018;
+	// self.courseType = 1;
+	//self.term = 3;
+	// TODO: (P0) REMOVE THESE
 	
 	self.bids = [{}];
 	$http.get('/data/professors').then(function(data) {
@@ -71,6 +80,10 @@ app.controller('bidController', function($http) {
 		}
 	}
 	
+	self.updateGotInOption = function(index) {
+		self.bids[index]['gotIn'] = self.gotInOptions.indexOf(self.bids[index]['gotInText']);
+	}
+	
 	self.searchCourses = function(query, index) {
 		var validCourses = self.courses.filter(
 			teaches(self.bids[index]['selectedProfessor'], self.fullCourses['professorToCourse']));
@@ -95,6 +108,32 @@ app.controller('bidController', function($http) {
 	
 	self.isInType = function(course) {
 		return self.courseType === undefined || self.courseType == course['type'];
+	}
+
+	self.bidsDisabled = function() {
+		// TODO: (P4) allow course data from pre-2000.
+		// TODO: (P2) update 2018 to be the current year.
+		return self.courseType === undefined || self.term === undefined ||
+			self.classYear === undefined;
+	}
+	
+	self.isBidValid = function(bid) {
+		// Should also make sure course, professor are valid.
+		// Might fail for course, professor, term id == 0
+		return bid['selectedCourse'] !== undefined &&
+			bid['selectedProfessor'] !== undefined &&
+			bid['term'] !== undefined &&
+			bid['gotIn'] !== undefined;
+	}
+
+	self.canSubmit = function() {
+		// TODO: (P2) Codify these into reasons.
+		if (self.bidsDisabled()) return false;
+		if (self.courseType == self.ELECTIVE && self.term == self.ALL_TERMS) return false;
+		for (i = 0; i < self.bids.length; i++) {
+			if (!self.isBidValid(self.bids[i])) return false;
+		}
+		return true;
 	}
 	
 	self.addBid = function() {
@@ -122,22 +161,33 @@ app.controller('bidController', function($http) {
 		return [string.slice(0,i), string.slice(i+delimiter.length)];
 	}
 	
-	self.parse_bid_text = function() {
-		if (self.bid_text_entry === undefined || self.bid_text_entry.length == 0) return;
-		lines = self.bid_text_entry.split('\n').filter((x) => x.length > 0 && x.charCodeAt(0) == 183);
+	self.parseBidText = function() {
+		if (self.bidTextEntry === undefined || self.bidTextEntry.length == 0) return;
+		lines = self.bidTextEntry.split('\n').filter((x) => x.length > 0 && x.charCodeAt(0) == 183);
 		while (self.bids.length < lines.length) {
 			self.addBid();
 		}
 		
 		for (i = 0; i < lines.length; i++) {
 			parts = lines[i].split(/\s{2,}/);
+			console.log(parts);
+			if (parts.length < 4) {
+				continue;
+			}
+			if (parts[2].charAt(0) == 'T') {
+				parts[1] = parts[1] + " " + parts[2];
+				parts.splice(2, 1);
+			}
 				
 			termParts = parts[1].split(':');
 			yearTerm = termParts[termParts.length - 1].trim();
 			year = parseInt(yearTerm.substr(0, 4));
-			term = self.shortTerm.indexOf(yearTerm.substr(4, yearTerm.length));
+			term = yearTerm.substr(4, yearTerm.length);
+			if (term == 'FW' || term == 'FS') term = 'FA';
+			if (term == 'WS') term = 'WI';
+			term = self.shortTerm.indexOf(term);
 			if (term == self.SPRING || term == self.WINTER) year--;
-			self.year = year - 2000;
+			//self.year = year - 2000;
 			
 			courseParts = self.lSplitOnce(parts[2], (':'));
 			course = courseParts[courseParts.length - 1].trim();
@@ -145,16 +195,10 @@ app.controller('bidController', function($http) {
 			// Trim out middle names in future or better, fuzzy find to name.
 			professorParts = parts[3].split(':');
 			professor = professorParts[professorParts.length - 1].trim();
-			firstLast = professor.split(",");
-			professor = firstLast[1].trim() + " " + firstLast[0];
-			firstMiddleLast = professor.split(' ');
-			// TODO: (P2) Remove this hack for Sullivan.
-			professorFL = firstMiddleLast.length <= 3 ?
-				firstMiddleLast[0] + " " + firstMiddleLast[2] :
-				firstMiddleLast[0] + " " + firstMiddleLast[1] + " " + firstMiddleLast[3] +
-					" " + firstMiddleLast[2].toProperCase() + ".";
-			pData = self.professorNameMap[professor] === undefined ?
-				self.professorNameMap[professorFL] : self.professorNameMap[professor];
+			lastFirstRest = professor.split(',');
+			console.log(lastFirstRest);
+			professorName = lastFirstRest[1].trim().split(' ')[0] + " " + lastFirstRest[0];
+			pData = self.professorNameMap[professorName];
 			
 			// Should use the priority instead just in case.
 			self.bids[i] = {'termName': self.terms[term],
@@ -167,8 +211,12 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.submit = function() {
-		// TODO: (P2) Remove the 2000 year hack.
-		$http.post('/submit_bids', {'bids': self.bids, 'year': 2000 + self.year})
+		$http.post('/submit_bids', {
+			'bids': self.bids,
+			'id': 3,
+			'classYear': self.classYear,
+			'courseType': self.courseType,
+			'term': self.term})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');
 		}, function onError(response) {

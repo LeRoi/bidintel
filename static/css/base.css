@@ -4,6 +4,15 @@
 	display: table;
 }
 
+.content-body {
+	padding-left: 12px;
+	padding-top: 12px;
+}
+
+.right-align-break {
+	margin-left: auto;
+}
+
 .padded {
 	margin-left: 12px;
 	margin-top: 12px;
@@ -12,4 +21,8 @@
 .padding {
 	padding-left: 24px;
 	padding-top: 24px;
+}
+
+[ng\:cloak], [ng-cloak], [data-ng-cloak], [x-ng-cloak], .ng-cloak, .x-ng-cloak {
+  display: none !important;
 }
