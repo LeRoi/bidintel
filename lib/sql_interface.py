@@ -31,11 +31,25 @@ class SQL:
             cId INTEGER,
             pIds TEXT);'''
 
+        ## Year is graduation year.
         CREATE_USERS_TABLE = '''
         CREATE TABLE users (
             id INTEGER PRIMARY KEY,
-            hasBid BIT,
-            bids TEXT);'''
+            email TEXT,
+            year INTEGER,
+            intl_1L TEXT,
+            spring_1L TEXT,
+            clinic_2L TEXT,
+            multisection_2L TEXT,
+            fall_2L TEXT,
+            winter_2L TEXT,
+            spring_2L TEXT,
+            clinic_3L TEXT,
+            multisection_3L TEXT,
+            legalprof_3L TEXT,
+            fall_3L TEXT,
+            winter_3L TEXT,
+            spring_3L TEXT);'''
 
         CREATE_BIDS_TABLE = '''
         CREATE TABLE bids (

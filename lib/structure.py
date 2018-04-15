@@ -1,4 +1,5 @@
 from enum import IntEnum
+from constants import *
 from logic import *
 
 class Term(IntEnum):
@@ -25,13 +26,15 @@ class GotIn(IntEnum):
     FROM_BIDS = 1
     OFF_WAITLIST = 2
 
-class User():
-    def __init__(self, u_id, bids=[]):
-        self.id = u_id
-        self.bids = bids
 
-    def has_bids(self):
-        return len(self.bids) > 0
+## TODO: see how useful any part of this file is from here and below
+##class User():
+##    def __init__(self, u_id, bids=[]):
+##        self.id = u_id
+##        self.bids = bids
+##
+##    def has_bids(self):
+##        return len(self.bids) > 0
 
 class Course():
     def __init__(self, c_id, name, course_type):
@@ -82,6 +85,7 @@ class Professor():
         self.id = p_id ## int:    unique professor id
         self.name = name ## string: full professor name
 
+## Is this used anywhere?
 def email_to_bid_data(email):
     lines = email.split('\n')
     bids = []

@@ -129,7 +129,9 @@ app.controller('bidController', function($http) {
 	}
 
 	self.canSubmit = function() {
+		// TODO: (P2) Codify these into reasons.
 		if (self.bidsDisabled()) return false;
+		if (self.courseType == self.ELECTIVE && self.term == self.ALL_TERMS) return false;
 		for (i = 0; i < self.bids.length; i++) {
 			if (!self.isBidValid(self.bids[i])) return false;
 		}
@@ -199,7 +201,10 @@ app.controller('bidController', function($http) {
 	}
 	
 	self.submit = function() {
-		$http.post('/submit_bids', {'bids': self.bids, 'year': self.year})
+		$http.post('/submit_bids', {
+			'bids': self.bids,
+			'id': 3,
+			'year': self.year})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');
 		}, function onError(response) {

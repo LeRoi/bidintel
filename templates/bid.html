@@ -11,7 +11,7 @@
 {% endblock %}
 
 {% block body %}
-<div ng-app="bidintel" ng-controller="bidController as ctrl">
+<div ng-app="bidintel" ng-controller="bidController as ctrl" class="ng-cloak">
 	{% include "header.html" %}
 	<div class="content-body">
 		<div class="dropdowns">
@@ -162,6 +162,7 @@
 		</div>
 		* If you got off a waitlist, mark it as such regardless of if you accepted or not.<br>
 		* Clinics and other courses which span multiple semesters should be marked as the first semester they are found in.<br>
+		* Please do not submit 1L Spring Electives bids yet.<br>
 		* Can't find a course or professor? Submit an empty bid in its spot, and let me know!
 	</div>
 </div>

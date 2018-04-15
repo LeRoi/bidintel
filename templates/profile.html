@@ -6,10 +6,33 @@
 
 {% block body %}
 
-<div ng-app="bidintelProfile" ng-controller="bidProfileController as ctrl">
+<div ng-app="bidintelProfile"
+	ng-controller="bidProfileController as ctrl"
+	style="text-align: center;"
+	class="ng-cloak">
 	{% include "header.html" %}
-	<div class="content-body">
-		Profile page
+	<div class="content-body profile">
+		<div ng-repeat="(key, value) in ctrl.userClassData" style="display: flex">
+			<div class="table-item key">
+				{{'{{ctrl.bidTypeToMessage[key]}}'}}
+			</div>
+			<div class="table-item submitted" ng-show="value == ctrl.SUBMITTED">
+				{{'{{ctrl.bidStatusToMessage[value]}}'}}
+			</div>
+			<div class="table-item missing"
+				ng-show="value == ctrl.MISSING"
+				ng-click="console.log('go to bids')">
+				{{'{{ctrl.bidStatusToMessage[value]}}'}}
+			</div>
+			<div class="table-item required"
+				ng-show="value == ctrl.REQUIRED"
+				ng-click="console.log('go to bids')">
+				{{'{{ctrl.bidStatusToMessage[value]}}'}}
+			</div>
+			<div class="table-item unavailable" ng-show="value == ctrl.UNAVAILABLE">
+				{{'{{ctrl.bidStatusToMessage[value]}}'}}
+			</div>
+		</div>
 	</div>
 </div>
 {% endblock %}

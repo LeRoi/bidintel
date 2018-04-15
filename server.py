@@ -11,6 +11,7 @@ debug = True
 database_src = 'dev/data/bidintel_dev.db'
 #database_src = DATABASE_PATH
 
+## Probably should move these to another file.
 full_course_reference = {}
 for result in sql.fetch_table(database_src, sql.Tables.FULL_COURSES):
     full_course_reference[result[0]] = {
@@ -39,12 +40,41 @@ course_reference_json = json.dumps({'courses':
       'name': course_reference[key]['name']} \
      for key in course_reference]})
 
+user_reference = {}
+for result in sql.fetch_table(database_src, sql.Tables.USERS):
+    data_map = {'id': result[0], 'year': result[2]}
+    bid_map = {}
+    for item in BidType:
+        ## 3 is the index of the first bid item.
+        bid_map[item.value] = sql.fetch_table[item.value + 3]
+    data_map.update(year_to_requirements(result[2], bid_map))
+    user_reference[result[1]] = data_map
+user_reference['kxia@jd20.law.harvard.edu'] = {
+    'id': 3,
+    'year': 2020}
+
+dummy_vals = {0: '1000,1001,1002,1003',
+    1: None,
+    2: None,
+    3: None,
+    4: None,
+    5: None,
+    6: None,
+    7: None,
+    8: None,
+    9: None,
+    10: None,
+    11: None,
+    12: None}
+user_reference['kxia@jd20.law.harvard.edu'].update(
+    year_to_requirements(2020, dummy_vals))
+
 def add_row(table, data):
     db = sql.sql_connect(database_src)
     sql.insert_row(db, table, data)
     db.close()
 
-## Move this to another file
+## Move this to another file - can also remove for prod
 def format_data(table, form, next_id):
     print '\tFormatting (ID=%d) %s for Table %s' % (next_id, str(form), str(sql.Tables(table)))
     if table == sql.Tables.PROFESSORS:
@@ -78,6 +108,15 @@ def courses():
 def fullcourses():
     return full_course_reference_json
 
+@app.route('/data/user', methods=['POST'])
+def user():
+    form = json.loads(request.data)
+    ## Verify the logged in user is the requested user.
+    ## Get user email
+    user_email = 'kxia@jd20.law.harvard.edu'
+    user_data = user_reference[user_email]
+    return json.dumps({'userdata': user_data})
+
 @app.route('/bid')
 def bid():
     return Response(render_template('bid.html'))
@@ -94,20 +133,22 @@ def profile():
 def logout():
     return Response(render_template('logout.html'))
 
-@app.route('/submit_rows', methods=['POST'])
-def submit_rows():
-    form = json.loads(request.data)
-    table = form['table']
-    db = sql.sql_connect(database_src)
-    next_id = sql.get_next_id(db, table)
-    sql.update_next_id(db, table, next_id + 1)
-    db.close()
-    add_row(table, format_data(table, form, next_id))
-    return json.dumps({'status':'OK'})
+##@app.route('/submit_rows', methods=['POST'])
+##def submit_rows():
+##    form = json.loads(request.data)
+##    table = form['table']
+##    db = sql.sql_connect(database_src)
+##    next_id = sql.get_next_id(db, table)
+##    sql.update_next_id(db, table, next_id + 1)
+##    db.close()
+##    add_row(table, format_data(table, form, next_id))
+##    return json.dumps({'status':'OK'})
 
 @app.route('/get_bid_stats', methods=['GET', 'POST'])
 def get_bid_stats():
-    ## TODO: (P1) Segment only by included items.
+    ## TODO: (P1) Segment only by included items. (kind of done).
+    ## TODO: (P2) Cache bids.
+    ## TODO: (P0) Check user status against requirements.
     form = json.loads(request.data)
     #print form
 
@@ -148,10 +189,12 @@ def get_bid_stats():
 
 @app.route('/submit_bids', methods=['POST'])
 def submit_bids():
+    ## TODO: (P0) Update user's submissions.
     print 'Received data: %s' % str(request.data)
     form = json.loads(request.data)
     bid_data = form['bids']
-    user_id = 3
+    ## Get user email; verify user.
+    user_id = user_reference[form['email']]
     db = sql.sql_connect(database_src)
     cursor = db.cursor()
     next_bid_id = sql.get_next_id(db, sql.Tables.BIDS)
