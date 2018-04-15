@@ -2,18 +2,6 @@ from enum import IntEnum
 from constants import *
 from logic import *
 
-class Term(IntEnum):
-    FALL = 0
-    WINTER = 1
-    SPRING = 2
-
-class CourseType(IntEnum):
-    GENERAL_ELECTIVE = 0
-    MULTISECTION = 1
-    CLINIC = 2
-    INTERNATIONAL = 3
-    LEGAL_PROFESSION = 4
-
 class NextId(IntEnum):
     PROFESSOR = 0
     COURSE = 1

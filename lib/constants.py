@@ -2,6 +2,18 @@ import datetime
 from enum import IntEnum
 DATABASE_PATH = 'data/bidintel.db'
 
+class Term(IntEnum):
+    FALL = 0
+    WINTER = 1
+    SPRING = 2
+
+class CourseType(IntEnum):
+    GENERAL_ELECTIVE = 0
+    MULTISECTION = 1
+    CLINIC = 2
+    INTERNATIONAL = 3
+    LEGAL_PROFESSION = 4
+
 class BidType(IntEnum):
     INTERNATIONAL_1L = 0
     SPRING_1L = 1

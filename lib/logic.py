@@ -24,7 +24,7 @@ def date_to_int(term, year):
 ## data has been submitted / needs to be submitted.
 ## 0 = submitted, 1 = missing, 2 = required, 3 = unavailable.
 ## TODO: (P2) Add transfer student logic
-def year_to_requirements(grad_year, bid_data):
+def year_to_requirements(grad_year, is_transfer, bid_data):
     today = datetime.datetime.now()
     year = 4 - (grad_year - today.year)
     bid_requirements = {}
@@ -45,6 +45,8 @@ def year_to_requirements(grad_year, bid_data):
         requirements = required_3L
         
     for requirement in requirements:
+        if is_transfer and requirement <= BidType.FALL_2L:
+            continue
         ## Submitted -> Submitted; Missing -> Required
         bid_requirements[requirement.value] *= 2
     
@@ -58,3 +60,44 @@ def year_to_requirements(grad_year, bid_data):
             bid_requirements[requirement] = 3
 
     return bid_requirements
+
+def form_to_update_column(form):
+    courseType = form['courseType']
+    term = form['term']
+    year = form['classYear'] + 1
+
+    if courseType == CourseType.INTERNATIONAL:
+        return BidType.INTERNATIONAL_1L
+    if courseType == CourseType.LEGAL_PROFESSION:
+        return BidType.LEGAL_PROFESSION_3L
+
+    general_elective = {
+        2: {Term.FALL: BidType.FALL_2L,
+            Term.WINTER: BidType.WINTER_2L,
+            Term.SPRING: BidType.SPRING_2L},
+        3: {Term.FALL: BidType.FALL_3L,
+            Term.WINTER: BidType.WINTER_3L,
+            Term.SPRING: BidType.SPRING_3L}}
+    if courseType == CourseType.GENERAL_ELECTIVE:
+        return BidType.SPRING_1L if year == 1 else general_elective[year][term]
+    if courseType == CourseType.CLINIC:
+        return BidType.CLINIC_2L if year == 2 else BidType.CLINIC_3L
+    if courseType == CourseType.MULTISECTION:
+        return BidType.MULTISECTION_2L if year == 2 else BidType.MULTISECTION_3L
+
+def column_to_name(bidType):
+    fields = {BidType.INTERNATIONAL_1L: 'intl_1L',
+        BidType.SPRING_1L: 'spring_1L',
+        BidType.CLINIC_2L: 'clinic_2L',
+        BidType.MULTISECTION_2L: 'multisection_2L',
+        BidType.FALL_2L: 'fall_2L',
+        BidType.WINTER_2L: 'winter_2L',
+        BidType.SPRING_2L: 'spring_2L',
+        BidType.CLINIC_3L: 'clinic_3L',
+        BidType.MULTISECTION_3L: 'multisection_3L',
+        BidType.LEGAL_PROFESSION_3L: 'legalprof_3L',
+        BidType.FALL_3L: 'fall_3L',
+        BidType.WINTER_3L: 'winter_3L',
+        BidType.SPRING_3L: 'spring_3L'}
+    return fields[bidType]
+            

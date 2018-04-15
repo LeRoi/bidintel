@@ -170,11 +170,22 @@ app.controller('bidController', function($http) {
 		
 		for (i = 0; i < lines.length; i++) {
 			parts = lines[i].split(/\s{2,}/);
+			console.log(parts);
+			if (parts.length < 4) {
+				continue;
+			}
+			if (parts[2].charAt(0) == 'T') {
+				parts[1] = parts[1] + " " + parts[2];
+				parts.splice(2, 1);
+			}
 				
 			termParts = parts[1].split(':');
 			yearTerm = termParts[termParts.length - 1].trim();
 			year = parseInt(yearTerm.substr(0, 4));
-			term = self.shortTerm.indexOf(yearTerm.substr(4, yearTerm.length));
+			term = yearTerm.substr(4, yearTerm.length);
+			if (term == 'FW' || term == 'FS') term = 'FA';
+			if (term == 'WS') term = 'WI';
+			term = self.shortTerm.indexOf(term);
 			if (term == self.SPRING || term == self.WINTER) year--;
 			//self.year = year - 2000;
 			
@@ -185,6 +196,7 @@ app.controller('bidController', function($http) {
 			professorParts = parts[3].split(':');
 			professor = professorParts[professorParts.length - 1].trim();
 			lastFirstRest = professor.split(',');
+			console.log(lastFirstRest);
 			professorName = lastFirstRest[1].trim().split(' ')[0] + " " + lastFirstRest[0];
 			pData = self.professorNameMap[professorName];
 			
@@ -202,7 +214,9 @@ app.controller('bidController', function($http) {
 		$http.post('/submit_bids', {
 			'bids': self.bids,
 			'id': 3,
-			'classYear': self.classYear})
+			'classYear': self.classYear,
+			'courseType': self.courseType,
+			'term': self.term})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');
 		}, function onError(response) {

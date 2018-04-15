@@ -42,54 +42,38 @@ course_reference_json = json.dumps({'courses':
 
 user_reference = {}
 for result in sql.fetch_table(database_src, sql.Tables.USERS):
-    data_map = {'id': result[0], 'year': result[2]}
+    print result, len(result)
+    data_map = {'id': result[0],
+                'year': result[2],
+                'is_transfer': result[3]}
     bid_map = {}
     for item in BidType:
         ## 3 is the index of the first bid item.
-        bid_map[item.value] = sql.fetch_table[item.value + 3]
-    data_map.update(year_to_requirements(result[2], bid_map))
+        bid_map[item.value] = result[item.value + 4]
+    data_map.update(year_to_requirements(result[2], result[3], bid_map))
     user_reference[result[1]] = data_map
-user_reference['kxia@jd20.law.harvard.edu'] = {
-    'id': 3,
-    'year': 2020}
 
-dummy_vals = {0: '1000,1001,1002,1003',
-    1: None,
-    2: None,
-    3: None,
-    4: None,
-    5: None,
-    6: None,
-    7: None,
-    8: None,
-    9: None,
-    10: None,
-    11: None,
-    12: None}
-user_reference['kxia@jd20.law.harvard.edu'].update(
-    year_to_requirements(2020, dummy_vals))
-
-def add_row(table, data):
-    db = sql.sql_connect(database_src)
-    sql.insert_row(db, table, data)
-    db.close()
+##def add_row(table, data):
+##    db = sql.sql_connect(database_src)
+##    sql.insert_row(db, table, data)
+##    db.close()
 
 ## Move this to another file - can also remove for prod
-def format_data(table, form, next_id):
-    print '\tFormatting (ID=%d) %s for Table %s' % (next_id, str(form), str(sql.Tables(table)))
-    if table == sql.Tables.PROFESSORS:
-        return struct.Professor(next_id, form['professor'])
-    elif table == sql.Tables.COURSES:
-        return struct.Course(next_id, form['course_name'],
-                                    int(form['course_type']))
-    elif table == sql.Tables.FULL_COURSES:
-        return struct.FullCourse(next_id, int(form['course_id']),
-                                        csv_to_ids(form['professor_ids']))
-    elif table == sql.Tables.USERS:
-        return struct.User(next_id, csv_to_ids(['bids']))
-    elif table == sql.Tables.BIDS:
-        return struct.Bid(next_id, int(form['term']),
-                                 int(form['year']), int(form['position']))
+##def format_data(table, form, next_id):
+##    print '\tFormatting (ID=%d) %s for Table %s' % (next_id, str(form), str(sql.Tables(table)))
+##    if table == sql.Tables.PROFESSORS:
+##        return struct.Professor(next_id, form['professor'])
+##    elif table == sql.Tables.COURSES:
+##        return struct.Course(next_id, form['course_name'],
+##                                    int(form['course_type']))
+##    elif table == sql.Tables.FULL_COURSES:
+##        return struct.FullCourse(next_id, int(form['course_id']),
+##                                        csv_to_ids(form['professor_ids']))
+##    elif table == sql.Tables.USERS:
+##        return struct.User(next_id, csv_to_ids(['bids']))
+##    elif table == sql.Tables.BIDS:
+##        return struct.Bid(next_id, int(form['term']),
+##                                 int(form['year']), int(form['position']))
   
 @app.route('/')
 def home():
@@ -200,8 +184,13 @@ def submit_bids():
     bid_data = form['bids']
     ## Get user email; verify user.
     email = 'kxia@jd20.law.harvard.edu'
-    user_id = form['id']
+    user_id = 999#form['id']
     user_year = user_reference[email]['year']
+
+    update_column = form_to_update_column(form)
+    col_name = column_to_name(update_column)
+    update_ids = []
+    
     db = sql.sql_connect(database_src)
     cursor = db.cursor()
     next_bid_id = sql.get_next_id(db, sql.Tables.BIDS)
@@ -221,13 +210,19 @@ def submit_bids():
         year = (3 - form['classYear']) + user_year
         sql.query(cursor, sql.SQL.INSERT.INSERT_BID %
                   (next_bid_id, full_id, bid['term'],
-                   year + (0 if bid['term'] == struct.Term.FALL else 1),
+                   year + (0 if bid['term'] == Term.FALL else 1),
                    i + 1, got_in, -1))
+        update_ids.append(next_bid_id)
         next_bid_id += 1
     sql.query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' %
           (next_bid_id, sql.Tables.BIDS))
+    sql.query(cursor, 'UPDATE users SET %s = "%s" WHERE id = %d' %
+              (col_name, ids_to_csv(update_ids), user_id))
     db.commit()
     db.close()
+
+    user_reference[email][update_column.value] = 0
+    
     return json.dumps({'status':'OK'})
 
 ## The database should always already exist.
