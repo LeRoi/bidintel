@@ -32,7 +32,7 @@ app.controller('bidStatsController', function($http) {
 		return data
 	}
 	
-	self.createChart = function(name, counts, successes) {
+	self.createChart = function(name, counts, successes, waits) {
 		if (self.myChart !== undefined) self.myChart.destroy();
 		self.ctx = document.getElementById(name).getContext('2d');
 		self.myChart = new Chart(self.ctx, {
@@ -50,6 +50,12 @@ app.controller('bidStatsController', function($http) {
 					data: self.generateChartData(successes),
 					backgroundColor: 'rgba(255, 206, 86, 0.2)',
 					borderColor: 'rgba(255, 206, 86, 1)',
+					borderWidth: 1
+				},{
+					label: '# of Waitlist Successes',
+					data: self.generateChartData(waits),
+					backgroundColor: 'rgba(75, 192, 192, 0.2)',
+					borderColor: 'rgba(75, 192, 192, 1)',
 					borderWidth: 1
 				}]
 			},
@@ -119,7 +125,7 @@ app.controller('bidStatsController', function($http) {
 				'courseType': self.courseTypes.indexOf(self.courseTypeText),
 		}).then(function(response) {
 			self.bidData = response.data; // May not need to store this.
-			self.createChart(self.COUNT_CHART, self.bidData['bidCounts'], self.bidData['bidSuccesses']);
+			self.createChart(self.COUNT_CHART, self.bidData['bidCounts'], self.bidData['bidSuccesses'], self.bidData['bidWaitlists']);
 		});
 	}
 });

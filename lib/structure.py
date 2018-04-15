@@ -22,10 +22,10 @@ class NextId(IntEnum):
     BID = 4
 
 class GotIn(IntEnum):
-    NO = 0
-    FROM_BIDS = 1
-    OFF_WAITLIST = 2
-
+    FROM_BIDS = 0
+    OFF_WAITLIST = 1
+    NO = 2
+    DONT_REMEMBER = 3
 
 ## TODO: see how useful any part of this file is from here and below
 ##class User():

@@ -18,14 +18,16 @@ app.controller('bidController', function($http) {
 	self.ALL_TERMS = 3; // Index of "Full Year"
 	self.shortTerm = ['FA', 'WI', 'SP'];
 	
-	self.gotInOptions = ["Yes, from bids", "Yes, off waitlist", "No"];
+	self.years = ["1L", "2L", "3L"];
+	
+	self.gotInOptions = ["Yes, from bids", "Yes, off waitlist", "No", "I don't remember"];
 	
 	self.hasResults = true;
 
 	// REMOVE THESE
-	self.year = 2018;
-	self.courseType = 1;
-	self.term = 3;
+	// self.year = 2018;
+	// self.courseType = 1;
+	//self.term = 3;
 	// TODO: (P0) REMOVE THESE
 	
 	self.bids = [{}];
@@ -108,15 +110,11 @@ app.controller('bidController', function($http) {
 		return self.courseType === undefined || self.courseType == course['type'];
 	}
 
-	self.getYearString = function() {
-		return self.year === undefined ? "20XX" : (self.year + 1);
-	}
-
 	self.bidsDisabled = function() {
 		// TODO: (P4) allow course data from pre-2000.
 		// TODO: (P2) update 2018 to be the current year.
 		return self.courseType === undefined || self.term === undefined ||
-			self.year === undefined || self.year < 0;
+			self.classYear === undefined;
 	}
 	
 	self.isBidValid = function(bid) {
@@ -204,7 +202,7 @@ app.controller('bidController', function($http) {
 		$http.post('/submit_bids', {
 			'bids': self.bids,
 			'id': 3,
-			'year': self.year})
+			'classYear': self.classYear})
 			.then(function onSuccess(response) {
 			console.log('Bids submitted successfully.');
 		}, function onError(response) {

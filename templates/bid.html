@@ -26,6 +26,16 @@
 					</md-option>
 				</md-select>
 			</md-input-container>
+			<div style="padding-right: 24px">for</div>
+			<md-input-container style="padding-right: 24px">
+				<label>Class Year</label>
+				<md-select ng-model="ctrl.classYear"
+					class="md-no-underline">
+					<md-option ng-repeat="year in ctrl.years" ng-value=ctrl.years.indexOf(year)>
+						{{'{{year}}'}}
+					</md-option>
+				</md-select>
+			</md-input-container>
 			<md-input-container style="padding-right: 24px">
 				<label>Term</label>
 				<md-select ng-model="ctrl.term"
@@ -38,9 +48,6 @@
 					</md-option>
 				</md-select>
 			</md-input-container>
-			<div style="padding-right: 16px;">
-				<input ng-model="ctrl.year" type="number" style="width: 75px"></input>-{{'{{ctrl.getYearString()}}'}}
-			</div>
 		</div>
 		<div class="buttons">
 			<md-button class="md-raised md-primary"

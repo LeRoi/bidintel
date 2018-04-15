@@ -169,16 +169,21 @@ def get_bid_stats():
         if valid_term and valid_course and valid_professor:
             full_ids.append(k)
 
-    results = {'bidCounts':{}, 'bidSuccesses':{}}
+    results = {'bidCounts':{}, 'bidSuccesses':{}, 'bidWaitlists':{}}
     for result in sql.fetch_table(database_src, sql.Tables.BIDS):
         bidDate = date_to_int(result[2], result[3])
         #print 'Comparing start: %d\tend: %d\tvalue: %d' % (startDate, endDate, bidDate)
         if result[1] in full_ids and bidDate >= startDate and \
            bidDate <= endDate:
-            if result[5]:
-                if result[4] not in results['bidSuccesses']:
-                    results['bidSuccesses'][result[4]] = 0
-                results['bidSuccesses'][result[4]] += 1
+            target = None
+            if result[5] == struct.GotIn.FROM_BIDS:
+                target = 'bidSuccesses'
+            if result[5] == struct.GotIn.OFF_WAITLIST:
+                target = 'bidWaitlists'
+            if target:
+                if result[4] not in results[target]:
+                    results[target][result[4]] = 0
+                results[target][result[4]] += 1
             #print '\tbidDate is within range!'
             #print 'Start: %d\tEnd: %d\tActual: %d' % (startDate, endDate, bidDate)
             if result[4] not in results['bidCounts']:
@@ -194,7 +199,9 @@ def submit_bids():
     form = json.loads(request.data)
     bid_data = form['bids']
     ## Get user email; verify user.
-    user_id = user_reference[form['email']]
+    email = 'kxia@jd20.law.harvard.edu'
+    user_id = form['id']
+    user_year = user_reference[email]['year']
     db = sql.sql_connect(database_src)
     cursor = db.cursor()
     next_bid_id = sql.get_next_id(db, sql.Tables.BIDS)
@@ -211,9 +218,10 @@ def submit_bids():
             if v['c_id'] == course_id and prof_id in v['p_ids']:
                 full_id = k
         got_in = int(bid['gotIn'] if 'gotIn' in bid else False)
+        year = (3 - form['classYear']) + user_year
         sql.query(cursor, sql.SQL.INSERT.INSERT_BID %
                   (next_bid_id, full_id, bid['term'],
-                   form['year'] + (0 if bid['term'] == struct.Term.FALL else 1),
+                   year + (0 if bid['term'] == struct.Term.FALL else 1),
                    i + 1, got_in, -1))
         next_bid_id += 1
     sql.query(cursor, 'UPDATE nextIds SET nextId = %d WHERE id = %d' %
