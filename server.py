@@ -145,44 +145,8 @@ def get_bid_stats():
     ## TODO: (P0) Check user status against requirements.
     form = json.loads(request.data)
     #print form
-
-    startDate = date_to_int(form['startTerm'], form['startYear'])
-    endDate = date_to_int(form['endTerm'], form['endYear'])
-
-    c_id = form['course']['id'] if form['course'] else None
-    p_id = form['professor']['id'] if form['professor'] else None
-    c_type = form['courseType'] # Could be -1 or a real value.
-    
-    full_ids = []
-    for k in full_course_reference:
-        v = full_course_reference[k]
-        valid_term = c_type == -1 or \
-                     course_reference[v['c_id']]['type'] == c_type
-        valid_course = not c_id or v['c_id'] == c_id
-        valid_professor = not p_id or p_id in v['p_ids']
-        if valid_term and valid_course and valid_professor:
-            full_ids.append(k)
-
-    results = {'bidCounts':{}, 'bidSuccesses':{}, 'bidWaitlists':{}}
-    for result in sql.fetch_table(database_src, sql.Tables.BIDS):
-        bidDate = date_to_int(result[2], result[3])
-        #print 'Comparing start: %d\tend: %d\tvalue: %d' % (startDate, endDate, bidDate)
-        if result[1] in full_ids and bidDate >= startDate and \
-           bidDate <= endDate:
-            target = None
-            if result[5] == struct.GotIn.FROM_BIDS:
-                target = 'bidSuccesses'
-            if result[5] == struct.GotIn.OFF_WAITLIST:
-                target = 'bidWaitlists'
-            if target:
-                if result[4] not in results[target]:
-                    results[target][result[4]] = 0
-                results[target][result[4]] += 1
-            #print '\tbidDate is within range!'
-            #print 'Start: %d\tEnd: %d\tActual: %d' % (startDate, endDate, bidDate)
-            if result[4] not in results['bidCounts']:
-                results['bidCounts'][result[4]] = 0
-            results['bidCounts'][result[4]] += 1
+    bids = sql.fetch_table(database_src, sql.Tables.BIDS)
+    results = compute_stats(bids, form, full_course_reference, course_reference)
     #print results
     return json.dumps(results)
 

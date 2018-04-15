@@ -9,12 +9,6 @@ class NextId(IntEnum):
     USER = 3
     BID = 4
 
-class GotIn(IntEnum):
-    FROM_BIDS = 0
-    OFF_WAITLIST = 1
-    NO = 2
-    DONT_REMEMBER = 3
-
 ## TODO: see how useful any part of this file is from here and below
 ##class User():
 ##    def __init__(self, u_id, bids=[]):

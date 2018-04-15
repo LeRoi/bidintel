@@ -7,6 +7,12 @@ class Term(IntEnum):
     WINTER = 1
     SPRING = 2
 
+class GotIn(IntEnum):
+    FROM_BIDS = 0
+    OFF_WAITLIST = 1
+    NO = 2
+    DONT_REMEMBER = 3
+
 class CourseType(IntEnum):
     GENERAL_ELECTIVE = 0
     MULTISECTION = 1
