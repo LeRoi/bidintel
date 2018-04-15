@@ -101,6 +101,12 @@ def user():
     user_data = user_reference[user_email]
     return json.dumps({'userdata': user_data})
 
+@app.route('/data/new_user', methods=['POST'])
+def new_user():
+    form = json.loads(request.data)
+    ## Validate, then write the new user.
+    return json.dumps({'status': 'OK'})
+
 @app.route('/bid')
 def bid():
     return Response(render_template('bid.html'))
@@ -112,6 +118,10 @@ def stats():
 @app.route('/profile')
 def profile():
     return Response(render_template('profile.html'))
+
+@app.route('/setup')
+def setup():
+    return Response(render_template('setup.html'))
 
 @app.route('/logout')
 def logout():

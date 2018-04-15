@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block head %}
+	<script src="/static/js/setup.js"></script>
+	<link rel="stylesheet" href="/static/css/setup.css">
+{% endblock %}
+
+{% block body %}
+
+<div ng-app="bidintelSetup"
+	ng-controller="bidSetupController as ctrl"
+	class="ng-cloak">
+	{% include "header.html" %}
+	<div class="content-body" style="display: inline-block">
+		<md-switch md-invert ng-model="ctrl.isTransfer">
+			Are you a transfer student? No
+		</md-switch>
+		<div>Yes</div>
+		Any disclaimers needed
+		Create my account
+	</div>
+</div>
+{% endblock %}
